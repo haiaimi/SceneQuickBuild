@@ -3,6 +3,7 @@
 #include "FlightPlatform.h"
 #include "Components/StaticMeshComponent.h"
 #include "Engine/Engine.h"
+#include "Common/OriginHelper.h"
 
 
 AFlightPlatform::AFlightPlatform()
@@ -12,10 +13,14 @@ AFlightPlatform::AFlightPlatform()
 
 void AFlightPlatform::BeginPlay()
 {
-	//测试枚举与字符串之间的转换
-	/*UEnum* Test = FindObject<UEnum>(ANY_PACKAGE, TEXT("EPlatformModule"));
-	int32 i = Test->GetValueByNameString(TEXT("ERadar"));
-	GEngine->AddOnScreenDebugMessage(-1, 20.f, FColor::Black, FString::FormatAsNumber(i));*/
+	//从飞行平台的配置文件中读取数据
+	TArray<int32>  EnumsResult;
+	OriginHelper::PrepareJson(FlightConfigName);
+	OriginHelper::GetNumberFromJson(FlightConfigName, TEXT("FlySpeed"), 0, FlySpeed);
+	OriginHelper::GetNumberFromJson(FlightConfigName, TEXT("FlyAccleration"), 1, FlyAcceleration);
+	OriginHelper::GetVectorFromJson(FlightConfigName, TEXT("FlyLocation"), 2, FlyLocation);
+	EnumsFromJson(FlightConfigName, TEXT("FlightModules"), EPlatformModule, 3, EnumsResult);
+	OriginHelper::ResetJson();
 }
 
 void AFlightPlatform::Tick(float DeltaTime)

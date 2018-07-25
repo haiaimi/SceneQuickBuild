@@ -30,7 +30,7 @@ namespace EPlatformModule
 	enum Type
 	{
 		EMissle_Air2Air,     //空对空到导弹
-		EMissle_Air2Surfacfe,  //空对地导弹
+		EMissle_Air2Surface,  //空对地导弹
 		ERadar,      //雷达
 	};
 }

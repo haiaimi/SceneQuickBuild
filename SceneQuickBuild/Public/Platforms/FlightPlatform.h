@@ -6,6 +6,8 @@
 #include "WorldBase/BaseActor.h"
 #include "FlightPlatform.generated.h"
 
+static const FString FlightConfigName(TEXT("CommonPlane.json"));
+
 /**
  * 飞行平台，目前就直接继承于BaseActor，后面会抽象出Platform中间层
  */
