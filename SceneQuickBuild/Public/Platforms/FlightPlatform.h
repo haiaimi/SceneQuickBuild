@@ -27,10 +27,20 @@ public:
 
 	virtual void UpdateCommunicateType()override;
 
+	virtual void SetToTCP_UDPMode()override;
+
+	virtual void SetToManualControlMode()override;
+
+	virtual void SetToJsonMode()override;
+
+	virtual void SetToXmlMode()override;
+
 public:
 	/**飞机网格模型*/
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 	class UStaticMeshComponent * PlaneMesh;
+
+	class UMovementComponent* PlatformMovementComponent;
 
 private:
 	///该飞行平台的具体参数
