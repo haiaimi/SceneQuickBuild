@@ -12,6 +12,9 @@ ABaseActor::ABaseActor():
 void ABaseActor::BeginPlay()
 {
 	Super::BeginPlay();
+
+	//更新通信状态，执行对应通信状态的方法
+	UpdateCommunicateType();   
 }
 
 void ABaseActor::Tick(float DeltaTime)

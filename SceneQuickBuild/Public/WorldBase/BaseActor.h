@@ -33,6 +33,17 @@ public:
 	/**更新通信模式，在切换模式后通常还需要执行切换通信模式后的操作**/
 	virtual void UpdateCommunicateType() {};
 
+	/**TCP/UDP通信方式，设置对应的Receiver和Sender*/
+	virtual void SetToTCP_UDPMode() {};
+
+	/**手动控制模式*/
+	virtual void SetToManualControlMode() {};
+
+	/**读取Json外部文件模式*/
+	virtual void SetToJsonMode() {};
+
+	/**读取Xml外部文件模式*/
+	virtual void SetToXmlMode() {};
 public:
 	/**外部通信模式*/
 	EOutsideCommunicate::Type CommunicateType;
