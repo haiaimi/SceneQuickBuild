@@ -4,8 +4,10 @@
 
 #include "CoreMinimal.h"
 
-#define  TypeToChar(T) #T
+#define TypeToChar(T) #T
 #define EnumsFromJson(FileName,Key,EnumType,Index,OutEnums) OriginHelper::GetEnumsFromJson(FileName,Key,TEXT(TypeToChar(EnumType)),Index,OutEnums);
+#define SerializeEnumsToJson(Key,EnumType,InEnums) OriginHelper::SerializeEnums(Key,TEXT(TypeToChar(EnumType)),InEnums);
+
 /**
  * 项目通用方法库
  */
@@ -25,20 +27,35 @@ public:
 	  * @Param FileName     配置文件名 
 	  * @Param JsonData     Json文件的字符串数据
 	  */
-	static bool WriteJsonToFile(const FString& RelativePath, const FString& FileName, const FString& JsonData);
+	static bool WriteJsonToFile(const FString& FileName, const FString& JsonData);
+	
+	/** 从Json对象中获取数据*/
+	static FString GetStringDatafromJsonObject(const TSharedPtr<FJsonObject>& JsonObj);
 
-	static void SerializeNumber();
+	/** 序列化数字数据
+	  * @Param Key 写入数据的键值
+	  * @Param InNum 写入的数据
+	  */
+	static void SerializeNumber(const FString& Key, const float InNum);
+
+	/** 序列化向量类型*/
+	static void SerializeVector(const FString& Key, const FVector& InVector);
+
+	/** 序列化枚举*/
+	static void SerializeEnums(const FString& Key, const FString& EnumName, const TArray<int32>& InEnums);
+
+	/** 结束序列化，把Json对象写入到文件中*/
+	static void FinishSerizlize(const FString& FileName);
 
 	///向Json中写入（序列化相关）End
 
 	///Json文件读取相关(反序列化) Begin
 
 	/* 从文件加载信息，是加载到字符串里
-	 * @Param RelativePath 在游戏资源文件夹中的位置（相对于资源文件夹）
 	 * @Param FileName     配置文件名
 	 * @Param OutInfo      读取输出的信息
 	 */
-	static bool LoadStringFromFile(const FString& RelativePath, const FString& FileName, FString& OutInfo);
+	static bool LoadStringFromFile(const FString& FileName, FString& OutInfo);
 
 	/** 准备Json读取，就是事先从文件读取文件，并构建Json对象用以读取文件,所以尽量一个一个文件的读，否则会浪费性能
 	  * @Param FileName Json文件名称
@@ -67,4 +84,6 @@ private:
 	static FString CurParseFile;
 	/** 解析的结果*/
 	static TArray<TSharedPtr<class FJsonValue>>  JsonParser;
+	/** 存放Json数据的数据，用于序列化*/
+	static TArray<TSharedPtr<FJsonValue>> JsonDataArray;
 };

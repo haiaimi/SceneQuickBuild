@@ -10,6 +10,7 @@
 FString OriginHelper::CurParseFile = FString(TEXT("CommonPlane.json"));    //初始化文件名称
 FString OriginHelper::RelativePath = FString(TEXT("ConfigRes/FlightPlatform"));
 TArray<TSharedPtr<FJsonValue>> OriginHelper::JsonParser = {};
+TArray<TSharedPtr<FJsonValue>> OriginHelper::JsonDataArray = {};
 
 void OriginHelper::Init(const FString& InRelativePath)
 {
@@ -26,14 +27,14 @@ void OriginHelper::Debug_LogMessage(FString&& InString)
 	UE_LOG(LogOrigin, Log, TEXT("%s"), *InString)
 }
 
-bool OriginHelper::WriteJsonToFile(const FString& RelativePath, const FString& FileName, const FString& JsonData)
+bool OriginHelper::WriteJsonToFile(const FString& FileName, const FString& JsonData)
 {
 	if (JsonData.IsEmpty())return false;
 
 	if (!FileName.IsEmpty())
 	{
 		FString AbsolutePath = FPaths::ProjectContentDir() + RelativePath + "/" + FileName;
-		if(FFileHelper::SaveStringToFile(JsonData,*AbsolutePath))
+		if(FFileHelper::SaveStringToFile(JsonData, *AbsolutePath))
 		{
 			Debug_LogMessage(TEXT("文件保存成功"));
 			return true;
@@ -44,9 +45,87 @@ bool OriginHelper::WriteJsonToFile(const FString& RelativePath, const FString& F
 			return false;
 		}
 	}
+	return false;
 }
 
-bool OriginHelper::LoadStringFromFile(const FString& RelativePath, const FString& FileName, FString& OutInfo)
+FString OriginHelper::GetStringDatafromJsonObject(const TSharedPtr<FJsonObject>& JsonObj)
+{
+	FString OutString;
+	if (JsonObj.IsValid() && JsonObj->Values.Num() > 0)
+	{
+		TSharedRef<TJsonWriter<TCHAR>> JsonWriter = TJsonWriterFactory<TCHAR>::Create(&OutString);
+		FJsonSerializer::Serialize(JsonObj.ToSharedRef(), JsonWriter);
+	}
+	return OutString;
+}
+
+void OriginHelper::SerializeNumber(const FString& Key, const float InNum)
+{
+	TSharedPtr<FJsonObject> NumObject = MakeShareable(new FJsonObject);
+	NumObject->SetNumberField(Key, InNum);
+	TSharedPtr<FJsonValueObject> NumValue = MakeShareable(new FJsonValueObject(NumObject));
+
+	JsonDataArray.Add(NumValue);
+}
+
+void OriginHelper::SerializeVector(const FString& Key, const FVector& InVector)
+{
+	TArray<TSharedPtr<FJsonValue>> AxisArray;
+	TSharedPtr<FJsonObject> VectorObject = MakeShareable(new FJsonObject);
+	AxisArray.Reset();
+
+	// 依次创建3个分量的Json数据对象
+	TSharedPtr<FJsonValue> AxisValue_X = MakeShareable(new FJsonValueNumber(InVector.X));
+	AxisArray.Add(AxisValue_X);
+	TSharedPtr<FJsonValue> AxisValue_Y = MakeShareable(new FJsonValueNumber(InVector.Y));
+	AxisArray.Add(AxisValue_Y);
+	TSharedPtr<FJsonValue> AxisValue_Z = MakeShareable(new FJsonValueNumber(InVector.Z));
+	AxisArray.Add(AxisValue_Z);
+
+	VectorObject->SetArrayField(Key, AxisArray);
+	//创建一个Json对象 数据类型
+	TSharedPtr<FJsonValueObject> VectorDataValue = MakeShareable(new FJsonValueObject(VectorObject));  
+	JsonDataArray.Add(VectorDataValue);
+}
+
+void OriginHelper::SerializeEnums(const FString& Key, const FString& EnumName, const TArray<int32>& InEnums)
+{
+	//存放枚举的数组
+	TArray<TSharedPtr<FJsonValue>> EnumsArray;
+	TSharedPtr<FJsonObject> EnumsObject = MakeShareable(new FJsonObject);
+
+	UEnum* TargetEnum = FindObject<UEnum>(ANY_PACKAGE, *EnumName);
+	if (TargetEnum)
+	{
+		for (auto& Iter : InEnums)
+		{
+			FString TempName = TargetEnum->GetNameStringByIndex(Iter);
+			//Debug_LogMessage(MoveTemp(TempName));
+			if (!TempName.IsEmpty())
+			{
+				TSharedPtr<FJsonValueString> EnumValue = MakeShareable(new FJsonValueString(TempName));
+				EnumsArray.Add(EnumValue);
+			}
+		}
+		EnumsObject->SetArrayField(Key, EnumsArray);
+		TSharedPtr<FJsonValueObject> EnumsDataValue = MakeShareable(new FJsonValueObject(EnumsObject));
+		JsonDataArray.Add(EnumsDataValue);
+	}
+}
+
+void OriginHelper::FinishSerizlize(const FString& FileName)
+{
+	TSharedPtr<FJsonObject> JsonObject = MakeShareable(new FJsonObject);
+	JsonObject->SetArrayField(TEXT("Origin"), JsonDataArray);
+
+	FString JsonString = GetStringDatafromJsonObject(JsonObject);
+	// 删除
+	JsonString.RemoveAt(0, 13);
+	JsonString.RemoveFromEnd(TEXT("}"));
+	WriteJsonToFile(FileName, JsonString);
+}
+
+bool OriginHelper::LoadStringFromFile(const FString& FileName, FString& OutInfo)
 {
 	if (FileName.IsEmpty())return false;
 
@@ -66,7 +145,7 @@ void OriginHelper::PrepareJson(const FString& FileName)
 {
 	FString JsonContent;
 	CurParseFile = FileName;
-	if (LoadStringFromFile(RelativePath, FileName, JsonContent))
+	if (LoadStringFromFile(FileName, JsonContent))
 	{
 		TSharedRef<TJsonReader<TCHAR>> JsonReader = TJsonReaderFactory<TCHAR>::Create(JsonContent);       //创建Json读取实例类
 
@@ -113,7 +192,6 @@ void OriginHelper::GetEnumsFromJson(const FString& FileName, const FString& Key,
 	if (FileName.Equals(CurParseFile) && JsonParser.Num() > 0)
 	{
 		UEnum* TargetEnum = FindObject<UEnum>(ANY_PACKAGE, *EnumName);
-		//int32 i = TargetEnum->GetValueByNameString(TEXT(""))
 		TArray<TSharedPtr<FJsonValue>> EnumsArray = JsonParser[Index]->AsObject()->GetArrayField(Key);
 		if (TargetEnum)
 		{
@@ -134,4 +212,5 @@ void OriginHelper::ResetJson()
 {
 	CurParseFile.Empty();
 	JsonParser.Empty();
+	JsonDataArray.Empty();
 }
