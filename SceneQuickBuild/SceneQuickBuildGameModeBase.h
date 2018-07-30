@@ -14,7 +14,8 @@ class SCENEQUICKBUILD_API ASceneQuickBuildGameModeBase : public AGameModeBase
 {
 	GENERATED_BODY()
 	
-	
+public:
+	ASceneQuickBuildGameModeBase();
 	
 	
 };
