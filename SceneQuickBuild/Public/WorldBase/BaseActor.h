@@ -3,15 +3,15 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "GameFramework/Actor.h"
 #include "SceneQuickBuildType.h"
+#include "GameFramework/Pawn.h"
 #include "BaseActor.generated.h"
 
 /**
   * 场景中所有模块的基类，包括基本的控制模式，及模块的一些通用属性
   */
 UCLASS()
-class SCENEQUICKBUILD_API ABaseActor : public AActor
+class SCENEQUICKBUILD_API ABaseActor : public APawn
 {
 	GENERATED_BODY()
 	
@@ -22,6 +22,8 @@ public:
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
+
+	virtual void SetupPlayerInputComponent(UInputComponent* PlayerInputComponent);
 
 public:	
 	// Called every frame
@@ -44,9 +46,26 @@ public:
 
 	/**读取Xml外部文件模式*/
 	virtual void SetToXmlMode() {};
+
+	//下面都是基本的移动
+	virtual void MoveForward(float Val);
+
+	virtual void MoveRight(float Val);
+
+	//移动方法内部具体实现，可以在派生类中重写
+	virtual void Implementation_MoveForward(float Val);
+
+	virtual void Implementation_MoveRight(float Val);
+
 public:
 	/**外部通信模式*/
 	EOutsideCommunicate::Type CommunicateType;
+
+	class USceneComponent* BaseScene;
+
+	class UPawnMovementComponent* ModuleMovement;
+
+	class UCameraComponent* ViewCamera;
 
 private:
 	/**该模块所在平台，该成员可以为空*/
