@@ -35,12 +35,18 @@ public:
 
 	virtual void SetToXmlMode()override;
 
+	//下面是飞行平台的移动方式，可以定制化移动方式
+	virtual void Implementation_MoveForward(float Val);
+
+	virtual void Implementation_MoveRight(float Val);
+
+	UFUNCTION()
+	void EventTest();
+
 public:
 	/**飞机网格模型*/
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 	class UStaticMeshComponent * PlaneMesh;
-
-	class UMovementComponent* PlatformMovementComponent;
 
 private:
 	///该飞行平台的具体参数
