@@ -12,5 +12,5 @@ USQBGameInstance::USQBGameInstance()
 
 void USQBGameInstance::RegisterBaseActor(class ABaseActor* InRef)
 {
-
+	AllBaseActor.Add(InRef);
 }

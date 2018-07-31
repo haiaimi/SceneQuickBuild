@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "Engine/GameInstance.h"
+#include "BaseActor.h"
 #include "SQBGameInstance.generated.h"
 
 /**
@@ -21,6 +22,7 @@ public:
 	/** 注册BaseActor，以便相互之间的通信*/
 	void RegisterBaseActor(class ABaseActor* InRef);
 
-public:
-	TArray<class ABaseActor> AllBaseActor;
+private:
+	TArray<class ABaseActor*> AllBaseActor;
+	
 };
