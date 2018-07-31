@@ -32,6 +32,8 @@ public:
 	/**切换通信方式*/
 	void SetCommunicateType(EOutsideCommunicate::Type InType);
 
+	void SetMaxSpeed(float InSpeed);
+
 	/**更新通信模式，在切换模式后通常还需要执行切换通信模式后的操作**/
 	virtual void UpdateCommunicateType() {};
 
@@ -67,7 +69,14 @@ public:
 
 	class UCameraComponent* ViewCamera;
 
+protected:
+	/**平台类型*/
+	EPlatformCategory::Type PlatformType;
+
 private:
 	/**该模块所在平台，该成员可以为空*/
 	ABaseActor * OwnerPltform;
+
+	/** 平台信息，包含平台的一些基础信息*/
+	struct FPlatformData* PlatformData;
 };

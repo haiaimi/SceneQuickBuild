@@ -8,7 +8,8 @@
 
 ABaseActor::ABaseActor():
 	CommunicateType(EOutsideCommunicate::ELoadConfigFile_Json),    //默认是读取Json文件的方式
-	OwnerPltform(nullptr)
+	OwnerPltform(nullptr),
+	PlatformType(EPlatformCategory::EBaseModule)
 {
 	PrimaryActorTick.bCanEverTick = true;
 	ModuleMovement = CreateDefaultSubobject<UPawnMovementComponent, UFloatingPawnMovement>(TEXT("ModuleMovement"));
@@ -50,6 +51,12 @@ void ABaseActor::SetCommunicateType(EOutsideCommunicate::Type InType)
 	CommunicateType = InType;
 	//更新通信模式，不同的模块会重写不同的方法
 	UpdateCommunicateType();  
+}
+
+void ABaseActor::SetMaxSpeed(float InSpeed)
+{
+	UFloatingPawnMovement* CurMovement = Cast<UFloatingPawnMovement>(ModuleMovement);
+	CurMovement->MaxSpeed = InSpeed;
 }
 
 void ABaseActor::MoveForward(float Val)
