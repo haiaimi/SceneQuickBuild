@@ -21,6 +21,7 @@ AFlightPlatform::AFlightPlatform()
 	static ConstructorHelpers::FObjectFinder<UStaticMesh> MeshFinder(TEXT("/Game/Plane/CGModel/F18C/F-18C_Hornet"));
 	if (!ensure(MeshFinder.Succeeded()))return;
 	PlaneMesh->SetStaticMesh(MeshFinder.Object);
+	PlatformType = EPlatformCategory::EFlight;
 	//PlatformMovementComponent = CreateDefaultSubobject<UMovementComponent>(TEXT("PlatformMovementComponent"));
 	//PlatformMovementComponent->SetUpdatedComponent(PlaneMesh);
 }
@@ -61,6 +62,10 @@ void AFlightPlatform::Tick(float DeltaTime)
 	ViewCamera->SetRelativeLocation(FVector(0.f, ShakeTime * 0.7f, CurRelHeight)*2.f);
 
 	ShakeTime += DeltaTime * AddDir;
+
+	AddMovementInput(GetActorRotation().Vector());
+	SetMaxSpeed(FlySpeed*DeltaTime);
+	OriginHelper::Debug_ScreenMessage(FString::SanitizeFloat(FlySpeed));
 }
 
 void AFlightPlatform::UpdateCommunicateType()
@@ -115,30 +120,47 @@ void AFlightPlatform::SetToXmlMode()
 
 void AFlightPlatform::Implementation_MoveForward(float Val)
 {
-	Super::Implementation_MoveForward(Val * 200.f);
+	FlySpeed += 1000 * Val;
+
+	//Super::Implementation_MoveForward(Val * 200.f);
 }
 
 void AFlightPlatform::Implementation_MoveRight(float Val)
 {
-	static bool bRotated = false;
-	FRotator PlaneRot = GetActorRotation();
-	
-	//在转弯时机身适当倾斜
-	if (Val > 0 && !bRotated)
+	static float CurOffsetAngle = 0.f;  //当前偏移的角度
+	float DeltaTime = GetWorld()->GetDeltaSeconds();
+
+	if (Val != 0.f)
 	{
-		bRotated = true;
 		FRotator PlaneRot = GetActorRotation();
-		//this->AddActorWorldRotation()
-	
-		PlaneRot.Roll += 30.f;
-		SetActorRotation(PlaneRot);
+		const FQuat AddedAngle_Yaw(FVector(0.f, 0.f, 1.f), Val * FMath::DegreesToRadians(DeltaTime*20.f));
+
+		AddActorWorldRotation(AddedAngle_Yaw);
+		if (CurOffsetAngle > -30.f && CurOffsetAngle < 30.f)
+		{
+			CurOffsetAngle += Val * DeltaTime * 30.f;
+			PlaneRot = GetActorRotation();
+			const FQuat AddedAngle_Roll(FRotationMatrix(PlaneRot).GetUnitAxis(EAxis::X), -Val * FMath::DegreesToRadians(DeltaTime*30.f*1.5f));
+			AddActorWorldRotation(AddedAngle_Roll);
+		}
 	}
 	else
 	{
-
+		if (CurOffsetAngle != 0.f)
+		{
+			FRotator PlaneRot = GetActorRotation();
+			float DeltaAngle = DeltaTime * (CurOffsetAngle > 0.f ? -30.f : 30.f);
+			const FQuat AddedAngle_Yaw(FRotationMatrix(PlaneRot).GetUnitAxis(EAxis::X), -FMath::DegreesToRadians(DeltaAngle*1.5f));
+			AddActorWorldRotation(AddedAngle_Yaw);
+			const float Tmp = CurOffsetAngle + DeltaAngle;
+			if (CurOffsetAngle*Tmp <= 0.f)
+			{
+				CurOffsetAngle = 0.f;
+			}
+			else
+				CurOffsetAngle = Tmp;
+		}
 	}
-
-	Super::Implementation_MoveRight(Val * 200.f);
 }
 
 void AFlightPlatform::EventTest()
