@@ -23,6 +23,17 @@ namespace EOutsideCommunicate
 	};
 }
 
+/**各个不同平台的枚举*/
+namespace EPlatformCategory
+{
+	enum Type
+	{
+		EBaseModule,      //基础模块
+		EFlight,          //飞行平台
+		ETank,            //陆地坦克
+	};
+}
+
 /**平台各个模块枚举*/
 UENUM(BlueprintType)
 namespace EPlatformModule
@@ -34,3 +45,28 @@ namespace EPlatformModule
 		ERadar,      //雷达
 	};
 }
+
+/**本方与敌方*/
+UENUM(BlueprintType)
+namespace ESQBTeam
+{
+	enum Type
+	{
+		UnKnow,
+		EPlayer,   //玩家本方
+		EEnemy,     //敌方
+	};
+}
+
+/**平台的信息*/
+USTRUCT(BlueprintType)
+struct FPlatformData
+{
+	GENERATED_USTRUCT_BODY()
+
+	/**所属队伍*/
+	ESQBTeam::Type OwnerTeam;
+
+	/**平台类型*/
+	EPlatformCategory::Type PlatformType;
+};
