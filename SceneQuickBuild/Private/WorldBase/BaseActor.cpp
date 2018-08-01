@@ -24,7 +24,6 @@ void ABaseActor::BeginPlay()
 
 	//更新通信状态，执行对应通信状态的方法
 	UpdateCommunicateType();   
-	//DECLARE_MULTICAST_DELEGATE
 }
 
 void ABaseActor::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
@@ -78,5 +77,11 @@ void ABaseActor::Implementation_MoveRight(float Val)
 {
 	FRotator ControlRot = GetControlRotation();
 	AddMovementInput(FRotationMatrix(ControlRot).GetUnitAxis(EAxis::Y), Val);
+}
+
+void ABaseActor::SetPlatformData(FName InID, ESQBTeam::Type InTeam)
+{
+	PlatformData.ID = InID;
+	PlatformData.OwnerTeam = InTeam;
 }
 

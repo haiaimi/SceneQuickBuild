@@ -59,6 +59,14 @@ public:
 
 	virtual void Implementation_MoveRight(float Val);
 
+	/**获取平台信息*/
+	struct FPlatformData GetPlatformData() { return PlatformData; };
+
+	/**设置平台信息*/
+	void SetPlatformData(FName InID, ESQBTeam::Type InTeam);
+
+	GET_SPECIFIED_PLATFORM_DATA(PlatformData.ID, TArray<FName>, AllOtherName, this);
+
 public:
 	/**外部通信模式*/
 	EOutsideCommunicate::Type CommunicateType;
@@ -75,8 +83,8 @@ protected:
 
 private:
 	/**该模块所在平台，该成员可以为空*/
-	ABaseActor * OwnerPltform;
+	class ABaseActor * OwnerPltform;
 
 	/** 平台信息，包含平台的一些基础信息*/
-	struct FPlatformData* PlatformData;
+	struct FPlatformData PlatformData;
 };

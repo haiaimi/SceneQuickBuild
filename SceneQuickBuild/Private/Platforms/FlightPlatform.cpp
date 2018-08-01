@@ -65,7 +65,11 @@ void AFlightPlatform::Tick(float DeltaTime)
 
 	AddMovementInput(GetActorRotation().Vector());
 	SetMaxSpeed(FlySpeed*DeltaTime);
-	OriginHelper::Debug_ScreenMessage(FString::SanitizeFloat(FlySpeed));
+	/*FName ID(TEXT("Plane_1"));
+	FName ID2(TEXT("Plane_2"));
+	OriginHelper::Debug_ScreenMessage(FString::FormatAsNumber(ID.GetNumber()));
+	OriginHelper::Debug_ScreenMessage(FString::FormatAsNumber(ID2.GetNumber()));*/
+
 }
 
 void AFlightPlatform::UpdateCommunicateType()

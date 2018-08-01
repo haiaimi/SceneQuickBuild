@@ -19,10 +19,24 @@ void APlatformController::BeginPlay()
 	Super::BeginPlay();
 	ControlPlatform = GetWorld()->SpawnActor<AFlightPlatform>(FVector(-225.f, 0.f, 17454.f), FRotator(0.f,0.f,0.f));
 	if (ControlPlatform)
+	{
 		Possess(ControlPlatform);
+		ControlPlatform->SetPlatformData(TEXT("Plane_1"), ESQBTeam::EPlayer);
+
+		if (USQBGameInstance* GameInstance = Cast<USQBGameInstance>(GetGameInstance()))
+		{
+			GameInstance->RegisterBaseActor(ControlPlatform);
+		}
+	}
 
 	FInputModeGameOnly InputMode;
 	SetInputMode(InputMode);
+
+	TArray<FName> Result = ControlPlatform->GetData_AllOtherName();
+	for (auto Iter = TArray<FName>::TIterator(Result); Iter; ++Iter)
+	{
+		OriginHelper::Debug_ScreenMessage((*Iter).ToString());
+	}
 }
 
 // Called every frame
