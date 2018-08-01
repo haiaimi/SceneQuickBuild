@@ -1,14 +1,27 @@
 ﻿// Fill out your copyright notice in the Description page of Project Settings.
-
+#pragma once
 #include "CoreMinimal.h"
+#include "Gameplay/SQBGameInstance.h"
+#include "OriginHelper.h"
 #include "SceneQuickBuildType.generated.h"
 
-#pragma once
-
 /**
-* 该项目中常用的类型，枚举，结构等等
+* 该项目中常用的宏，类型，枚举，结构等等
 */
 
+#define GET_SPECIFIED_PLATFORM_DATA(PlatformID, DataType, DataName, ActorRef) \
+DataType GetData_##DataName()     \
+{     \
+	DataType Temp;   \
+	if(GetWorld())  \
+	{  \
+		if (USQBGameInstance* GameInstance = Cast<USQBGameInstance>(GetWorld()->GetGameInstance()))  \
+		{            \
+			Temp = GameInstance->GetData_##DataName(PlatformID, ActorRef); \
+		}           \
+	}    \
+	return Temp;     \
+}
 
 /**基础组件的通信模式*/
 UENUM(BlueprintType)
@@ -64,9 +77,15 @@ struct FPlatformData
 {
 	GENERATED_USTRUCT_BODY()
 
+	/**平台ID，每个平台实例都有独立的ID号*/
+	FName ID;
+
 	/**所属队伍*/
 	ESQBTeam::Type OwnerTeam;
 
 	/**平台类型*/
 	EPlatformCategory::Type PlatformType;
+
+	/**平台所在位置*/
+	FVector PlatformPos;
 };
