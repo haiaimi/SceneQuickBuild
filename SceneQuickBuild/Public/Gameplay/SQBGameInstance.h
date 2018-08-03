@@ -20,7 +20,10 @@ public:
 	
 public:
 	/** 注册BaseActor，以便相互之间的通信*/
-	void RegisterBaseActor(class ABaseActor* InRef);
+	void RegisterSQBActor(class ABaseActor* InRef);
+
+	/** 注销列表中存在的Actor，此时该Actor已被摧毁或者不参与通信交互*/
+	void UnRegisterSQBActor(class ABaseActor* InRef);
 
 	template<class T>
 	bool SpawnSQBActor(UClass* InClass, FVector const* Location = NULL, FRotator const* Rotation = NULL, const FActorSpawnParameters& SpawnParameters = FActorSpawnParameters())
@@ -30,16 +33,19 @@ public:
 		{
 			if (SpawnedActor->GetClass()->IsChildOf(ABaseActor::StaticClass()))
 			{
-				RegisterBaseActor(SpawnedActor);
+				RegisterSQBActor(SpawnedActor);
 				return true;
 			}
 		}
 		return false;      //生成失败
 	}
 	
-	/**获取所有BaseActor的ID名*/
+	/** 获取所有BaseActor的ID名*/
 	TArray<FName> GetData_AllOtherName(FName& PlatformID, class ABaseActor* ActorRef);
 
 private:
-	TArray<class ABaseActor*> AllBaseActor;
+	TArray<class ABaseActor*> AllSQBActor;
+
+	/**所有SQBActor相关的数据*/
+	TArray<struct FPlatformData*> AllSQBData;
 };

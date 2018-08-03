@@ -24,6 +24,10 @@ AFlightPlatform::AFlightPlatform()
 	PlatformType = EPlatformCategory::EFlight;
 	//PlatformMovementComponent = CreateDefaultSubobject<UMovementComponent>(TEXT("PlatformMovementComponent"));
 	//PlatformMovementComponent->SetUpdatedComponent(PlaneMesh);
+
+	PlatformData = new struct FFlightData;
+	PlatformData->FlySpeed = 1000.f;
+	PlatformData->ID = TEXT("Plane");
 }
 
 void AFlightPlatform::BeginPlay()
@@ -39,6 +43,14 @@ void AFlightPlatform::BeginPlay()
 	SerializeEnumsToJson(TEXT("PlaneModlues"), EPlatformModule, EnumsResult);
 	OriginHelper::FinishSerizlize(TEXT("Test.json"));
 	OriginHelper::ResetJson();
+
+	//OriginHelper::Debug_ScreenMessage(FString::FormatAsNumber(PlatformData->FlySpeed), 10.f);
+	FPlatformData test;
+	test.Speed.Plane_Speed = 5.f;
+	test.Speed.Ship_Speed = 10.f;
+
+	OriginHelper::Debug_ScreenMessage(FString::SanitizeFloat(test.Speed.Plane_Speed));
+	OriginHelper::Debug_ScreenMessage(FString::SanitizeFloat(test.Speed.Ship_Speed));
 }
 
 void AFlightPlatform::Tick(float DeltaTime)
@@ -72,6 +84,13 @@ void AFlightPlatform::Tick(float DeltaTime)
 
 }
 
+void AFlightPlatform::BeginDestroy()
+{
+	Super::BeginDestroy();
+	delete PlatformData;
+	PlatformData = nullptr;
+}
+
 void AFlightPlatform::UpdateCommunicateType()
 {
 	//根据不同的通信模式，选择不同的模拟方式
@@ -102,7 +121,7 @@ void AFlightPlatform::SetToTCP_UDPMode()
 
 void AFlightPlatform::SetToManualControlMode()
 {
-
+	
 }
 
 void AFlightPlatform::SetToJsonMode()
@@ -119,7 +138,13 @@ void AFlightPlatform::SetToJsonMode()
 
 void AFlightPlatform::SetToXmlMode()
 {
+	//FFlightData* a = new FFlightData();
+	//FPlatformData* b = a;
+	//FFlightData* c = static_cast<FFlightData*>(b);
+	//OriginHelper::Debug_ScreenMessage(FString::Printf(TEXT("Address: %d"), a),10.f);
+	//OriginHelper::Debug_ScreenMessage(FString::Printf(TEXT("Address: %d"), b),10.f);
 
+	//delete a;
 }
 
 void AFlightPlatform::Implementation_MoveForward(float Val)

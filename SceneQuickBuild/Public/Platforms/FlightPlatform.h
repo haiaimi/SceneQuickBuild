@@ -25,6 +25,8 @@ protected:
 public:	
 	virtual void Tick(float DeltaTime) override;	
 
+	virtual void BeginDestroy()override;
+
 	virtual void UpdateCommunicateType()override;
 
 	virtual void SetToTCP_UDPMode()override;
@@ -38,7 +40,7 @@ public:
 	//下面是飞行平台的移动方式，可以定制化移动方式
 	virtual void Implementation_MoveForward(float Val);
 
-	virtual void Implementation_MoveRight(float Val);
+	virtual void Implementation_MoveRight(float val);
 
 	UFUNCTION()
 	void EventTest();
@@ -47,6 +49,8 @@ public:
 	/**飞机网格模型*/
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 	class UStaticMeshComponent * PlaneMesh;
+
+	struct FFlightData* PlatformData;
 
 private:
 	///该飞行平台的具体参数

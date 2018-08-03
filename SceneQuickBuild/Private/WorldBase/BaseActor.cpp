@@ -16,6 +16,8 @@ ABaseActor::ABaseActor():
 	ViewCamera = CreateDefaultSubobject<UCameraComponent>(TEXT("ViewCamera"));
 	BaseScene = CreateDefaultSubobject<USceneComponent>(TEXT("BaseScene"));
 	ViewCamera->SetupAttachment(BaseScene);
+	PlatformData = new struct FPlatformData;
+	PlatformData->ID = TEXT("Base");
 }
 
 void ABaseActor::BeginPlay()
@@ -24,6 +26,12 @@ void ABaseActor::BeginPlay()
 
 	//更新通信状态，执行对应通信状态的方法
 	UpdateCommunicateType();   
+
+	WH_TEST1(5, 10, 20, 40, 50)
+	int32 ArgCount = WH_ARG_COUNT(float, int, double, bool);
+	OriginHelper::Debug_ScreenMessage(FString::FormatAsNumber(i));
+	OriginHelper::Debug_ScreenMessage(FString::FormatAsNumber(j));
+	OriginHelper::Debug_ScreenMessage(FString::FormatAsNumber(ArgCount));
 }
 
 void ABaseActor::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
@@ -43,6 +51,14 @@ void ABaseActor::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent
 void ABaseActor::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
+}
+
+void ABaseActor::BeginDestroy()
+{
+	Super::BeginDestroy();
+
+	delete PlatformData;
+	PlatformData = nullptr; 
 }
 
 void ABaseActor::SetCommunicateType(EOutsideCommunicate::Type InType)
@@ -81,7 +97,12 @@ void ABaseActor::Implementation_MoveRight(float Val)
 
 void ABaseActor::SetPlatformData(FName InID, ESQBTeam::Type InTeam)
 {
-	PlatformData.ID = InID;
-	PlatformData.OwnerTeam = InTeam;
+	PlatformData->ID = InID;
+	PlatformData->OwnerTeam = InTeam;
+	FString::Printf(TEXT(""), 1);
 }
 
+void ABaseActor::WH_FFUN(float speed,int num)
+{
+
+}

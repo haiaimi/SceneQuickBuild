@@ -29,6 +29,8 @@ public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;	
 
+	virtual void BeginDestroy()override;
+
 	/**切换通信方式*/
 	void SetCommunicateType(EOutsideCommunicate::Type InType);
 
@@ -60,12 +62,23 @@ public:
 	virtual void Implementation_MoveRight(float Val);
 
 	/**获取平台信息*/
-	struct FPlatformData GetPlatformData() { return PlatformData; };
+	struct FPlatformData* GetPlatformData() { return PlatformData; };
 
 	/**设置平台信息*/
 	void SetPlatformData(FName InID, ESQBTeam::Type InTeam);
 
-	GET_SPECIFIED_PLATFORM_DATA(PlatformData.ID, TArray<FName>, AllOtherName, this);
+	/**宏测试*/
+	WH_DEF_FUN(WH_FFUN, void, float, speed, int, num);
+
+	WH_DEF_FUN(WH_FUN_1, void, FVector, speed, int, num, bool, visible);
+
+	/*void PublishMessage();
+
+	void SubscribeMessage();*/
+
+	GET_SPECIFIED_PLATFORM_DATA(PlatformData->ID, TArray<FName>, AllOtherName, this);
+
+	//BUILD_COMMUNICATE(a, a, FTest, Test, float, int);
 
 public:
 	/**外部通信模式*/
@@ -77,6 +90,9 @@ public:
 
 	class UCameraComponent* ViewCamera;
 
+	/** 平台信息，包含平台的一些基础信息*/
+	struct FPlatformData* PlatformData;
+
 protected:
 	/**平台类型*/
 	EPlatformCategory::Type PlatformType;
@@ -85,6 +101,6 @@ private:
 	/**该模块所在平台，该成员可以为空*/
 	class ABaseActor * OwnerPltform;
 
-	/** 平台信息，包含平台的一些基础信息*/
-	struct FPlatformData PlatformData;
+	/**信息发布的代理*/
+	FMessagePublish MessagePublicDel;
 };

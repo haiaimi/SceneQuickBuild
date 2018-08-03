@@ -25,7 +25,7 @@ void APlatformController::BeginPlay()
 
 		if (USQBGameInstance* GameInstance = Cast<USQBGameInstance>(GetGameInstance()))
 		{
-			GameInstance->RegisterBaseActor(ControlPlatform);
+			GameInstance->RegisterSQBActor(ControlPlatform);
 		}
 	}
 
@@ -35,7 +35,7 @@ void APlatformController::BeginPlay()
 	TArray<FName> Result = ControlPlatform->GetData_AllOtherName();
 	for (auto Iter = TArray<FName>::TIterator(Result); Iter; ++Iter)
 	{
-		OriginHelper::Debug_ScreenMessage((*Iter).ToString());
+		//OriginHelper::Debug_ScreenMessage((*Iter).ToString());
 	}
 }
 

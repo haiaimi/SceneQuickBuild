@@ -9,17 +9,22 @@ USQBGameInstance::USQBGameInstance()
 	
 }
 
-void USQBGameInstance::RegisterBaseActor(class ABaseActor* InRef)
+void USQBGameInstance::RegisterSQBActor(class ABaseActor* InRef)
 {
-	AllBaseActor.Add(InRef);
+	AllSQBActor.Add(InRef);
+}
+
+void USQBGameInstance::UnRegisterSQBActor(class ABaseActor* InRef)
+{
+	
 }
 
 TArray<FName> USQBGameInstance::GetData_AllOtherName(FName& PlatformID, class ABaseActor* ActorRef)
 {
 	TArray<FName> Result;
-	for (auto Iter : AllBaseActor)
+	for (auto Iter : AllSQBActor)
 	{
-		Result.Add(Iter->GetPlatformData().ID);
+		Result.Add(Iter->GetPlatformData()->ID);
 	}
 
 	return Result;
