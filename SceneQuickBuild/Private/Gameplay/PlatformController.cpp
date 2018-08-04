@@ -27,6 +27,28 @@ void APlatformController::BeginPlay()
 		{
 			GameInstance->RegisterSQBActor(ControlPlatform);
 		}
+
+		UFunction* test = ControlPlatform->GetClass()->FindFunctionByName(TEXT("EventTest"));
+
+		if (test)
+		{
+			OriginHelper::Debug_ScreenMessage(TEXT("FindFunction"));
+			struct Param
+			{
+				float Speed;
+				int32 Num;
+				int32 Return;
+			};
+			Param params;
+			params.Speed = 500.f;
+			params.Num = 10;
+			//void* param1 = nullptr;
+			//FFrame* Frame = new FFrame(ControlPlatform, test, &params);
+			//ControlPlatform->CallFunction(*Frame, &params, test);
+			ControlPlatform->ProcessEvent(test, (void*)(&params));
+			OriginHelper::Debug_ScreenMessage(FString::FormatAsNumber(params.Return));
+			//delete Frame;
+		}
 	}
 
 	FInputModeGameOnly InputMode;
