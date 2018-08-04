@@ -43,8 +43,9 @@ DECLARE_MULTICAST_DELEGATE_OneParam(FMessagePublish, FString&);
 
 #define FUN_ARGS(p,n) p##n
 
-#define WH_DEF_FUN(funName,retType,...)\
-retType funName(\
+#define WH_DEF_FUN(FunName,RetType,...)\
+UFUNCTION()\
+RetType FunName(\
 EXPAND(WH_FOREACH(##__VA_ARGS__))\
 )
 
@@ -57,6 +58,10 @@ int32 i = WH_CONCAT(v1,v2); \
 EXPAND(WH_TEST1__(##__VA_ARGS__))
 
 #define WH_TEST1(...) EXPAND(WH_TEST1_(##__VA_ARGS__))
+
+#define WH_ARGNAME_(arg1)\
+PlatformData.Speed.arg1##_Speed=arg1;
+#define WH_ARGNAME(arg1)WH_ARGNAME_(arg1)
 
 #define GET_SPECIFIED_PLATFORM_DATA(PlatformID, DataType, DataName, ActorRef) \
 DataType GetData_##DataName()     \
@@ -102,7 +107,7 @@ namespace EPlatformCategory
 	enum Type
 	{
 		EBaseModule,      //基础模块
-		EFlight,          //飞行平台
+		EPlane,          //飞行平台
 		ETank,            //陆地坦克
 	};
 }
@@ -125,7 +130,7 @@ namespace ESQBTeam
 {
 	enum Type
 	{
-		UnKnow,
+		UnKnown,
 		EPlayer,   //玩家本方
 		EEnemy,     //敌方
 	};
@@ -157,6 +162,19 @@ struct FPlatformData
 	};
 
 	PlatformData_Speed Speed;
+
+	FPlatformData()
+	{
+		ID = TEXT("None");
+		OwnerTeam = ESQBTeam::UnKnown;
+		PlatformType = EPlatformCategory::EBaseModule;
+	}
+
+	/**拷贝构造函数*/
+	FPlatformData(const FPlatformData& InData)
+	{
+		*this = InData;
+	}
 };
 
 /**具体的飞行平台*/
@@ -171,6 +189,12 @@ struct FFlightData :public FPlatformData
 	/**加速度*/
 	float FlyAcceleration;
 
+	FFlightData()
+	{
 
-	/***/
+	}
+
+	FFlightData(const FPlatformData& InData):
+		FPlatformData(InData)
+	{}
 };

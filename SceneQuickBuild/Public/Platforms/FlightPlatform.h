@@ -43,14 +43,14 @@ public:
 	virtual void Implementation_MoveRight(float val);
 
 	UFUNCTION()
-	void EventTest();
+	int32 EventTest(float Speed, int32 Num);
 
 public:
 	/**飞机网格模型*/
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 	class UStaticMeshComponent * PlaneMesh;
 
-	struct FFlightData* PlatformData;
+	struct FFlightData PlatformData;
 
 private:
 	///该飞行平台的具体参数

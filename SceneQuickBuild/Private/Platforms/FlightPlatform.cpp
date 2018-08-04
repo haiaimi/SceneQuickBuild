@@ -21,13 +21,11 @@ AFlightPlatform::AFlightPlatform()
 	static ConstructorHelpers::FObjectFinder<UStaticMesh> MeshFinder(TEXT("/Game/Plane/CGModel/F18C/F-18C_Hornet"));
 	if (!ensure(MeshFinder.Succeeded()))return;
 	PlaneMesh->SetStaticMesh(MeshFinder.Object);
-	PlatformType = EPlatformCategory::EFlight;
+	PlatformType = EPlatformCategory::EPlane;
 	//PlatformMovementComponent = CreateDefaultSubobject<UMovementComponent>(TEXT("PlatformMovementComponent"));
 	//PlatformMovementComponent->SetUpdatedComponent(PlaneMesh);
 
-	PlatformData = new struct FFlightData;
-	PlatformData->FlySpeed = 1000.f;
-	PlatformData->ID = TEXT("Plane");
+	PlatformData.ID = TEXT("Plane");
 }
 
 void AFlightPlatform::BeginPlay()
@@ -49,8 +47,18 @@ void AFlightPlatform::BeginPlay()
 	test.Speed.Plane_Speed = 5.f;
 	test.Speed.Ship_Speed = 10.f;
 
-	OriginHelper::Debug_ScreenMessage(FString::SanitizeFloat(test.Speed.Plane_Speed));
-	OriginHelper::Debug_ScreenMessage(FString::SanitizeFloat(test.Speed.Ship_Speed));
+	//OriginHelper::Debug_ScreenMessage(FString::SanitizeFloat(test.Speed.Plane_Speed));
+	//OriginHelper::Debug_ScreenMessage(FString::SanitizeFloat(test.Speed.Ship_Speed));
+
+	class A
+	{
+		//int a;
+
+		A() {};
+		virtual ~A() {}
+
+	};
+	OriginHelper::Debug_ScreenMessage(FString::FormatAsNumber(sizeof(float)));
 }
 
 void AFlightPlatform::Tick(float DeltaTime)
@@ -87,8 +95,6 @@ void AFlightPlatform::Tick(float DeltaTime)
 void AFlightPlatform::BeginDestroy()
 {
 	Super::BeginDestroy();
-	delete PlatformData;
-	PlatformData = nullptr;
 }
 
 void AFlightPlatform::UpdateCommunicateType()
@@ -192,7 +198,9 @@ void AFlightPlatform::Implementation_MoveRight(float Val)
 	}
 }
 
-void AFlightPlatform::EventTest()
+int32 AFlightPlatform::EventTest(float Speed, int32 Num)
 {
-	OriginHelper::Debug_ScreenMessage(TEXT("按下"), 5);
+	OriginHelper::Debug_ScreenMessage(FString::Printf(TEXT("Speed:%f"), Speed), 5);
+
+	return Num;
 }

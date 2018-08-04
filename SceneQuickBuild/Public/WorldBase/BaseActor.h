@@ -62,21 +62,23 @@ public:
 	virtual void Implementation_MoveRight(float Val);
 
 	/**获取平台信息*/
-	struct FPlatformData* GetPlatformData() { return PlatformData; };
+	struct FPlatformData GetPlatformData() { return PlatformData; };
 
 	/**设置平台信息*/
 	void SetPlatformData(FName InID, ESQBTeam::Type InTeam);
 
+	FPlatformData& GetBaseData() { return PlatformData; }
+
 	/**宏测试*/
 	WH_DEF_FUN(WH_FFUN, void, float, speed, int, num);
 
-	WH_DEF_FUN(WH_FUN_1, void, FVector, speed, int, num, bool, visible);
+	WH_DEF_FUN(WH_FUN_1, void, FVector, speed, int32, num, bool, visible);
 
 	/*void PublishMessage();
 
 	void SubscribeMessage();*/
 
-	GET_SPECIFIED_PLATFORM_DATA(PlatformData->ID, TArray<FName>, AllOtherName, this);
+	GET_SPECIFIED_PLATFORM_DATA(PlatformData.ID, TArray<FName>, AllOtherName, this);
 
 	//BUILD_COMMUNICATE(a, a, FTest, Test, float, int);
 
@@ -91,7 +93,7 @@ public:
 	class UCameraComponent* ViewCamera;
 
 	/** 平台信息，包含平台的一些基础信息*/
-	struct FPlatformData* PlatformData;
+	struct FPlatformData PlatformData;
 
 protected:
 	/**平台类型*/

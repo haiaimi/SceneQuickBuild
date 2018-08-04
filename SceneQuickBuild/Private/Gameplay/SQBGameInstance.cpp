@@ -24,7 +24,7 @@ TArray<FName> USQBGameInstance::GetData_AllOtherName(FName& PlatformID, class AB
 	TArray<FName> Result;
 	for (auto Iter : AllSQBActor)
 	{
-		Result.Add(Iter->GetPlatformData()->ID);
+		Result.Add(Iter->GetPlatformData().ID);
 	}
 
 	return Result;
