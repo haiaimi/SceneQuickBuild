@@ -5,6 +5,7 @@
 #include "OriginHelper.h"
 #include "SceneQuickBuildType.generated.h"
 
+extern TArray<FString> FunNames;
 /**
 * 该项目中常用的宏，类型，枚举，结构等等
 */
@@ -15,6 +16,10 @@ DECLARE_MULTICAST_DELEGATE_OneParam(FMessagePublish, FString&);
 #define EXPAND(x) x
 #define WH_CONCAT_(l,r) l##r
 #define WH_CONCAT(l,r) WH_CONCAT_(l,r) 
+#define SEPATATOR_1 ,
+#define SEPATATOR_2 ;
+
+#define DECLARENUM() int32 a = 1 SEPATATOR_1 b = 2 SEPATATOR_2
 
 /**
 * 下面的宏是用来计算宏可变参数列表的参数数量，这里最大计算6个，如果有需求可以继续添加
@@ -26,28 +31,87 @@ DECLARE_MULTICAST_DELEGATE_OneParam(FMessagePublish, FString&);
 #define WH_ARG_COUNT(...) EXPAND(WH_INTERNAL_ARG_COUNT(0, ##__VA_ARGS__, \
 	6, 5, 4, 3, 2, 1, 0))
 
-/*计算可变参数列表的一般数目*/
+/*计算可变参数列表的一半数目*/
 #define WH_ARG_COUNT_HALF(...) EXPAND(WH_INTERNAL_ARG_COUNT(0, ##__VA_ARGS__,\
 	3, 2.5, 2, 1.5, 1, 0.5, 0))
 
+
+/**获取多参数列表中偶数位/奇数位的参数*/
+#define WH_ARG0()
+#define WH_ARG2(f,t,v) f(t,v)
+#define WH_ARG4(f,t,v,...) WH_ARG2(f,t,v) SEPATATOR_1 EXPAND(WH_ARG2(f,##__VA_ARGS__))
+#define WH_ARG6(f,t,v,...) WH_ARG2(f,t,v) SEPATATOR_1 EXPAND(WH_ARG4(f,##__VA_ARGS__))
+#define WH_ARG8(f,t,v,...) WH_ARG2(f,t,v) SEPATATOR_1 EXPAND(WH_ARG6(f,##__VA_ARGS__))
+
+#define WH_ODD_FUN(t,v) t
+#define WH_EVEN_FUN(t,v) v
+#define WH_EVEN_CUSTOM_FUN_(t,v) InData->##v
+#define WH_EVEN_CUSTOM_FUN(t,v) WH_EVEN_CUSTOM_FUN_(t,v)
+
+#define WH_ODD_EVEN_ARG_(f,...) \
+		EXPAND(WH_CONCAT(WH_ARG, WH_ARG_COUNT(__VA_ARGS__))(f,##__VA_ARGS__))
+#define WH_ODD_EVEN_ARG(f,...) \
+		WH_ODD_EVEN_ARG_(f,##__VA_ARGS__)
+
+/**遍历多参数列表*/
 #define WH_DOARG0(o)
 #define WH_DOARG1(v_1,v_2,...) v_1  v_2
-#define WH_DOARG2(v_1,v_2,...) WH_DOARG1(v_1,v_2) , EXPAND(WH_DOARG1(##__VA_ARGS__))
-#define WH_DOARG3(v_1,v_2,...) WH_DOARG1(v_1,v_2) , EXPAND(WH_DOARG2(##__VA_ARGS__))
-#define WH_DOARG4(v_1,v_2,...) WH_DOARG1(v_1,v_2) , EXPAND(WH_DOARG3(##__VA_ARGS__))
+#define WH_DOARG2(v_1,v_2,...) WH_DOARG1(v_1,v_2) SEPATATOR_1 EXPAND(WH_DOARG1(##__VA_ARGS__))
+#define WH_DOARG3(v_1,v_2,...) WH_DOARG1(v_1,v_2) SEPATATOR_1 EXPAND(WH_DOARG2(##__VA_ARGS__))
+#define WH_DOARG4(v_1,v_2,...) WH_DOARG1(v_1,v_2) SEPATATOR_1 EXPAND(WH_DOARG3(##__VA_ARGS__))
 
 #define WH_FOREACH_(...) \
         EXPAND(WH_CONCAT(WH_DOARG,WH_ARG_COUNT_HALF(__VA_ARGS__))(##__VA_ARGS__))
 #define WH_FOREACH(...) \
         EXPAND(WH_FOREACH_(##__VA_ARGS__))
 
+#define WH_DOARG_STRUCT0(o)
+#define WH_DOARG_STRUCT1(v_1,v_2,...) v_1  v_2
+#define WH_DOARG_STRUCT2(v_1,v_2,...) WH_DOARG_STRUCT1(v_1,v_2) SEPATATOR_2 EXPAND(WH_DOARG_STRUCT1(##__VA_ARGS__))
+#define WH_DOARG_STRUCT3(v_1,v_2,...) WH_DOARG_STRUCT1(v_1,v_2) SEPATATOR_2 EXPAND(WH_DOARG_STRUCT2(##__VA_ARGS__))
+#define WH_DOARG_STRUCT4(v_1,v_2,...) WH_DOARG_STRUCT1(v_1,v_2) SEPATATOR_2 EXPAND(WH_DOARG_STRUCT3(##__VA_ARGS__))
+
+#define WH_FOREACH_STRUCT_(...) \
+        EXPAND(WH_CONCAT(WH_DOARG_STRUCT,WH_ARG_COUNT_HALF(__VA_ARGS__))(##__VA_ARGS__))
+#define WH_FOREACH_STRUCT(...) \
+        WH_FOREACH_STRUCT_(##__VA_ARGS__)
+
 #define FUN_ARGS(p,n) p##n
 
-#define WH_DEF_FUN(FunName,RetType,...)\
+#define WH_DECLARE_FUN(ClassName,FunName,FunNumber)\
+typedef ClassName::F##FunName F##FunName;\
+
+
+#define WH_DEFINE_FUN(FunName,RetType,...)\
+FUNC_DECLARE_DELEGATE(F##FunName##Delegate,RetType,EXPAND(WH_ODD_EVEN_ARG(WH_ODD_FUN, ##__VA_ARGS__))); \
+F##FunName##Delegate FunName##Delegate; \
+\
+struct WH_CONCAT(F,FunName) \
+{ \
+	EXPAND(WH_FOREACH_STRUCT(##__VA_ARGS__)) \
+	;\
+	RetType* ReturnVal; \
+};	\
+\
 UFUNCTION()\
 RetType FunName(\
 EXPAND(WH_FOREACH(##__VA_ARGS__))\
-)
+);\
+\
+UFUNCTION()\
+void FunName##_Publish(void* InArg)\
+{ \
+	if(InArg!=nullptr)\
+	{ \
+		F##FunName* InData = static_cast<F##FunName*>(InArg);\
+		if(FunName##Delegate.IsBound())\
+		{\
+			FunName##Delegate.Execute(EXPAND(WH_ODD_EVEN_ARG(WH_EVEN_CUSTOM_FUN, ##__VA_ARGS__)));\
+		}\
+	}\
+}
+
+
 
 /**多参数列表测试代码*/
 #define WH_TEST1__(v1,v2,...) \
