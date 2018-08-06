@@ -34,8 +34,8 @@ void ABaseActor::BeginPlay()
 
 	float Plane = 50.f;
 	WH_ARGNAME(Plane)
-
 	//OriginHelper::Debug_ScreenMessage(FString::SanitizeFloat(PlatformData.Speed.Plane_Speed));
+	//OriginHelper::Debug_ScreenMessage(FString::FormatAsNumber(a + b));
 }
 
 void ABaseActor::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
@@ -102,7 +102,8 @@ void ABaseActor::SetPlatformData(FName InID, ESQBTeam::Type InTeam)
 	PlatformData.OwnerTeam = InTeam;
 }
 
-void ABaseActor::WH_FFUN(float speed, int32 num)
+void ABaseActor::WH_FUN(float speed, int32 num)
 {
 	OriginHelper::Debug_ScreenMessage(TEXT("TestReflection"));
+	FunNames.Add("");
 }

@@ -200,7 +200,7 @@ void AFlightPlatform::Implementation_MoveRight(float Val)
 
 int32 AFlightPlatform::EventTest(float Speed, int32 Num)
 {
-	OriginHelper::Debug_ScreenMessage(FString::Printf(TEXT("Speed:%f"), Speed), 5);
+	//OriginHelper::Debug_ScreenMessage(FString::Printf(TEXT("Speed:%f"), Speed), 5);
 
 	return Num;
 }

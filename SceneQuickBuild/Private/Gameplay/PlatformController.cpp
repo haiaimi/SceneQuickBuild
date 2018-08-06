@@ -32,22 +32,34 @@ void APlatformController::BeginPlay()
 
 		if (test)
 		{
-			OriginHelper::Debug_ScreenMessage(TEXT("FindFunction"));
 			struct Param
 			{
 				float Speed;
 				int32 Num;
 				int32 Return;
+				FVector Pos;
 			};
+
 			Param params;
 			params.Speed = 500.f;
 			params.Num = 10;
+			params.Pos = FVector(10.f, 10.f, 10.f);
+
+			float* a = (float*)(&params);
+			OriginHelper::Debug_ScreenMessage(FString::FormatAsNumber(*a),5);
+			int32* b = (int32*)(++a);
+			OriginHelper::Debug_ScreenMessage(FString::FormatAsNumber(*b),5);
+			FVector* Pos = (FVector*)(++a);
+			OriginHelper::Debug_ScreenMessage(Pos->ToString());
 			//void* param1 = nullptr;
 			//FFrame* Frame = new FFrame(ControlPlatform, test, &params);
 			//ControlPlatform->CallFunction(*Frame, &params, test);
-			ControlPlatform->ProcessEvent(test, (void*)(&params));
-			OriginHelper::Debug_ScreenMessage(FString::FormatAsNumber(params.Return));
+			//ControlPlatform->ProcessEvent(test, (void*)(&params));
+			test->GetOuter()->ProcessEvent(test, (void*)(&params));
+			//OriginHelper::Debug_ScreenMessage(FString::FormatAsNumber(params.Return));
 			//delete Frame;
+
+			FMessagePublish Publisher;
 		}
 	}
 

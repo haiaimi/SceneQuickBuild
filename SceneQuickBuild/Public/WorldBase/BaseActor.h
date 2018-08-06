@@ -70,18 +70,23 @@ public:
 	FPlatformData& GetBaseData() { return PlatformData; }
 
 	/**宏测试*/
-	WH_DEF_FUN(WH_FFUN, void, float, speed, int, num);
+	WH_DEFINE_FUN(WH_FUN, void, float, speed, int, num);
+	FWH_FUNDelegate A;
 
-	WH_DEF_FUN(WH_FUN_1, void, FVector, speed, int32, num, bool, visible);
+	WH_DEFINE_FUN(WH_FUN_1, void, FVector, speed, int32, num, bool, visible);
+	FWH_FUN_1Delegate B;
 
+	UPROPERTY()
+	static FString FunName;
 	/*void PublishMessage();
 
 	void SubscribeMessage();*/
 
+
 	GET_SPECIFIED_PLATFORM_DATA(PlatformData.ID, TArray<FName>, AllOtherName, this);
 
 	//BUILD_COMMUNICATE(a, a, FTest, Test, float, int);
-
+	
 public:
 	/**外部通信模式*/
 	EOutsideCommunicate::Type CommunicateType;
