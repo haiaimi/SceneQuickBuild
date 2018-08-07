@@ -5,7 +5,6 @@
 #include "OriginHelper.h"
 #include "SceneQuickBuildType.generated.h"
 
-extern TArray<FString> FunNames;
 /**
 * 该项目中常用的宏，类型，枚举，结构等等
 */
@@ -47,11 +46,23 @@ DECLARE_MULTICAST_DELEGATE_OneParam(FMessagePublish, FString&);
 #define WH_EVEN_FUN(t,v) v
 #define WH_EVEN_CUSTOM_FUN_(t,v) InData->##v
 #define WH_EVEN_CUSTOM_FUN(t,v) WH_EVEN_CUSTOM_FUN_(t,v)
+#define WH_EVEN_CUSTOM_DATA_FUN(t,v)\
+PlatformData.##v=v
 
-#define WH_ODD_EVEN_ARG_(f,...) \
-		EXPAND(WH_CONCAT(WH_ARG, WH_ARG_COUNT(__VA_ARGS__))(f,##__VA_ARGS__))
-#define WH_ODD_EVEN_ARG(f,...) \
-		WH_ODD_EVEN_ARG_(f,##__VA_ARGS__)
+#define WH_ODD_EVEN_ARG_(v,f,...) \
+		EXPAND(WH_CONCAT(v, WH_ARG_COUNT(__VA_ARGS__))(f,##__VA_ARGS__))
+#define WH_ODD_EVEN_ARG(v,f,...) \
+		WH_ODD_EVEN_ARG_(v,f,##__VA_ARGS__)
+
+/**遍历赋值*/
+#define WH_ARG_DATA0()
+#define WH_ARG_DATA2(f,t,v) f(t,v)
+#define WH_ARG_DATA4(f,t,v,...) WH_ARG_DATA2(f,t,v) SEPATATOR_2 EXPAND(WH_ARG_DATA2(f,##__VA_ARGS__))
+#define WH_ARG_DATA6(f,t,v,...) WH_ARG_DATA2(f,t,v) SEPATATOR_2 EXPAND(WH_ARG_DATA4(f,##__VA_ARGS__))
+#define WH_ARG_DATA8(f,t,v,...) WH_ARG_DATA2(f,t,v) SEPATATOR_2 EXPAND(WH_ARG_DATA6(f,##__VA_ARGS__))
+
+#define WH_EVEN_CUSTOM_DATA_FUN(t,v)\
+PlatformData.##v=v
 
 /**遍历多参数列表*/
 #define WH_DOARG0(o)
@@ -78,12 +89,36 @@ DECLARE_MULTICAST_DELEGATE_OneParam(FMessagePublish, FString&);
 
 #define FUN_ARGS(p,n) p##n
 
-#define WH_DECLARE_FUN(ClassName,FunName,FunNumber)\
+#define WH_STRUCT(FunName) F##FunName
+#define WH_DELEGATE(FunName) F##FunName##Delegate
+
+#define WH_FUN_DEFINE_BEGIN()\
+TArray<FString> FunNames;\
+int64 DefineStart=1;
+
+#define WH_FUN_DEFINE_END(FunCount)\
+int32 CustomFunCounts=FunCount;
+
+/**识别方法名以便后面的使用*/
+#define WH_FUN_DEFINE_IMPLEMENT()\
+{\
+	FunNames.Reset(); \
+	int64* StartPoint = &this->DefineStart;\
+	FString* StrPoint = (FString*)(++StartPoint);\
+	for (int32 i = 0; i < CustomFunCounts; ++i)\
+	{\
+		FunNames.Add(*StrPoint);\
+		StrPoint = StrPoint + 4;\
+	}\
+}
+
+#define WH_CUSTOM_FUN_FINISH(ClassName,FunName,FunNumber)\
 typedef ClassName::F##FunName F##FunName;\
+typedef ClassName::F##FunName##Delegate F##FunName##Delegate;
 
-
-#define WH_DEFINE_FUN(FunName,RetType,...)\
-FUNC_DECLARE_DELEGATE(F##FunName##Delegate,RetType,EXPAND(WH_ODD_EVEN_ARG(WH_ODD_FUN, ##__VA_ARGS__))); \
+#define WH_FUN_DEFINE(FunName,RetType,...)\
+FString FunName##_STR=TEXT(#FunName);\
+FUNC_DECLARE_DELEGATE(F##FunName##Delegate,RetType,EXPAND(WH_ODD_EVEN_ARG(WH_ARG,WH_ODD_FUN, ##__VA_ARGS__))); \
 F##FunName##Delegate FunName##Delegate; \
 \
 struct WH_CONCAT(F,FunName) \
@@ -96,7 +131,10 @@ struct WH_CONCAT(F,FunName) \
 UFUNCTION()\
 RetType FunName(\
 EXPAND(WH_FOREACH(##__VA_ARGS__))\
-);\
+)\
+{\
+	WH_ODD_EVEN_ARG(WH_ARG_DATA, WH_EVEN_CUSTOM_DATA_FUN, ##__VA_ARGS__);\
+}\
 \
 UFUNCTION()\
 void FunName##_Publish(void* InArg)\
@@ -104,14 +142,17 @@ void FunName##_Publish(void* InArg)\
 	if(InArg!=nullptr)\
 	{ \
 		F##FunName* InData = static_cast<F##FunName*>(InArg);\
-		if(FunName##Delegate.IsBound())\
+		if(FunName##Delegate.IsBound() && InData)\
 		{\
-			FunName##Delegate.Execute(EXPAND(WH_ODD_EVEN_ARG(WH_EVEN_CUSTOM_FUN, ##__VA_ARGS__)));\
+			FunName##Delegate.Execute(EXPAND(WH_ODD_EVEN_ARG(WH_ARG,WH_EVEN_CUSTOM_FUN, ##__VA_ARGS__)));\
 		}\
 	}\
+}\
+\
+void Bind##FunName(ABaseActor* BindActor)\
+{\
+	FunName##Delegate.BindUObject(BindActor,&ABaseActor::##FunName);\
 }
-
-
 
 /**多参数列表测试代码*/
 #define WH_TEST1__(v1,v2,...) \
@@ -139,8 +180,8 @@ DataType GetData_##DataName()     \
 		}           \
 	}    \
 	return Temp;     \
+\
 }
-
 
 //#define BUILD_COMMUNICATE(PublishActor, SubscribeActor, DelegateName, DelegateInstance, ...)  \
 //FUNC_DECLARE_DELEGATE(DelegateName, ...)  \
@@ -197,6 +238,16 @@ namespace ESQBTeam
 		UnKnown,
 		EPlayer,   //玩家本方
 		EEnemy,     //敌方
+	};
+}
+
+UENUM()
+namespace EFunctionName
+{
+	enum Type
+	{
+		WH_FUN,
+		WH_FUN_1,
 	};
 }
 
