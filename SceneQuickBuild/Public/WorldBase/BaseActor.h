@@ -68,20 +68,22 @@ public:
 	void SetPlatformData(FName InID, ESQBTeam::Type InTeam);
 
 	FPlatformData& GetBaseData() { return PlatformData; }
-
+	
 	/**宏测试*/
-	WH_DEFINE_FUN(WH_FUN, void, float, speed, int, num);
-	FWH_FUNDelegate A;
+	/*下面的宏中间不要加任何东西，否则会影响内存定位错误，程序会崩溃*/
+	WH_FUN_DEFINE_BEGIN();
 
-	WH_DEFINE_FUN(WH_FUN_1, void, FVector, speed, int32, num, bool, visible);
-	FWH_FUN_1Delegate B;
+	WH_FUN_DEFINE(SendPosInfo, void, FVector, PlatformPos);
+	
+	//WH_FUN_DEFINE(WH_FUN, void, float, speed, int, num);
+	//
+	//WH_FUN_DEFINE(WH_FUN_1, void, FVector, speed, int32, num, bool, visible);
 
-	UPROPERTY()
-	static FString FunName;
+	WH_FUN_DEFINE_END(1);
+
 	/*void PublishMessage();
 
 	void SubscribeMessage();*/
-
 
 	GET_SPECIFIED_PLATFORM_DATA(PlatformData.ID, TArray<FName>, AllOtherName, this);
 
@@ -111,3 +113,5 @@ private:
 	/**信息发布的代理*/
 	FMessagePublish MessagePublicDel;
 };
+
+WH_CUSTOM_FUN_FINISH(ABaseActor, SendPosInfo, 2);

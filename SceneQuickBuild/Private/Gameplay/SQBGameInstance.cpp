@@ -30,3 +30,9 @@ TArray<FName> USQBGameInstance::GetData_AllOtherName(FName& PlatformID, class AB
 	return Result;
 }
 
+void USQBGameInstance::SendPosInfo(ABaseActor* Sender, ABaseActor* Receiver)
+{
+	FSendPosInfo Param;
+	Sender->BindSendPosInfo(Receiver);
+}
+

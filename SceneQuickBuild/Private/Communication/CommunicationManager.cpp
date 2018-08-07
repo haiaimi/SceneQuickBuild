@@ -3,9 +3,11 @@
 #include "CommunicationManager.h"
 #include "BaseActor.h"
 
+
 UCommunicationManager::UCommunicationManager()
 {
 	//ABaseActor::MyStruct A;
+	//FWH_FUN B;
 }
 
 void UCommunicationManager::BuildCommunication(class ABaseActor* PublishActor, class ABaseActor* SubscribeActor)
@@ -19,7 +21,5 @@ void UCommunicationManager::BuildCommunication(class ABaseActor* PublishActor, c
 	{
 		a.Execute(10, 10);
 	}
-	
-	ABaseActor* A;
 	//TPair<ABaseActor::MyStruct,UFunction*>
 }

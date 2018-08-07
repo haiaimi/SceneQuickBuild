@@ -29,7 +29,7 @@ void APlatformController::BeginPlay()
 		}
 
 		UFunction* test = ControlPlatform->GetClass()->FindFunctionByName(TEXT("EventTest"));
-
+		
 		if (test)
 		{
 			struct Param
@@ -46,11 +46,11 @@ void APlatformController::BeginPlay()
 			params.Pos = FVector(10.f, 10.f, 10.f);
 
 			float* a = (float*)(&params);
-			OriginHelper::Debug_ScreenMessage(FString::FormatAsNumber(*a),5);
+			//OriginHelper::Debug_ScreenMessage(FString::FormatAsNumber(*a),5);
 			int32* b = (int32*)(++a);
-			OriginHelper::Debug_ScreenMessage(FString::FormatAsNumber(*b),5);
+			//OriginHelper::Debug_ScreenMessage(FString::FormatAsNumber(*b),5);
 			FVector* Pos = (FVector*)(++a);
-			OriginHelper::Debug_ScreenMessage(Pos->ToString());
+			//OriginHelper::Debug_ScreenMessage(Pos->ToString());
 			//void* param1 = nullptr;
 			//FFrame* Frame = new FFrame(ControlPlatform, test, &params);
 			//ControlPlatform->CallFunction(*Frame, &params, test);

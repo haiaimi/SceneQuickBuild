@@ -6,6 +6,8 @@
 #include "Components/InputComponent.h"
 #include "GameFramework/PlayerInput.h"
 
+FName FunName = FName(TEXT("First"), 1);
+
 ABaseActor::ABaseActor():
 	CommunicateType(EOutsideCommunicate::ELoadConfigFile_Json),    //默认是读取Json文件的方式
 	OwnerPltform(nullptr),
@@ -36,6 +38,45 @@ void ABaseActor::BeginPlay()
 	WH_ARGNAME(Plane)
 	//OriginHelper::Debug_ScreenMessage(FString::SanitizeFloat(PlatformData.Speed.Plane_Speed));
 	//OriginHelper::Debug_ScreenMessage(FString::FormatAsNumber(a + b));
+
+	if (FName(TEXT("First"), 1, EFindName::FNAME_Find) != NAME_None)
+	{
+		FString A = FName(TEXT("First"), 1, EFindName::FNAME_Find).ToString();
+		//OriginHelper::Debug_ScreenMessage(MoveTemp(A),5);
+	}
+
+	FString str(TEXT("i'm very fine,how are you,test fstring length"));
+
+	OriginHelper::Debug_ScreenMessage(FString::FormatAsNumber(sizeof(str)), 10);
+
+	//OriginHelper::Debug_ScreenMessage(FString::FormatAsNumber(sizeof(ABaseActor)-sizeof(APawn)),10);
+	/*int32* a = (int32*)&this->a1;
+	OriginHelper::Debug_ScreenMessage(FString::Printf(TEXT("%p"), a),5);
+	OriginHelper::Debug_ScreenMessage(FString::Printf(TEXT("%p"), ++a),5);*/
+
+	/*int64* StartPoint = &this->DefineStart;
+	OriginHelper::Debug_ScreenMessage(FString::Printf(TEXT("%p"), StartPoint), 5);
+	OriginHelper::Debug_ScreenMessage(FString::Printf(TEXT("%p"), &this->WH_FUN_STR), 5);
+	OriginHelper::Debug_ScreenMessage(MoveTemp(*(FString*)(++StartPoint)),5);*/
+
+	FunNames.Reset();
+	int64* StartPoint = &this->DefineStart;
+	FString* StrPoint = (FString*)(++StartPoint);
+	for (int32 i = 0; i < CustomFunCounts; ++i)
+	{
+		FunNames.Add(*StrPoint);
+		StrPoint = StrPoint + 4;
+	}
+	UEnum* a = FindObject<UEnum>(ANY_PACKAGE, TEXT("EFunctionName"));
+	TArray<TPair<FName, int64>> EnumElems;
+	EnumElems.Add(TPair<FName, int64>(TEXT("WH_FUN"), 0));
+	EnumElems.Add(TPair<FName, int64>(TEXT("WH_FUN_1"), 1));
+	a->SetEnums(EnumElems, UEnum::ECppForm::Namespaced, false);
+	
+	OriginHelper::Debug_ScreenMessage(a->GetNameByIndex(0).ToString(), 5);
+	//a->SetEnums()
+	//UScriptStruct*  b;
+	
 }
 
 void ABaseActor::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
@@ -100,10 +141,4 @@ void ABaseActor::SetPlatformData(FName InID, ESQBTeam::Type InTeam)
 {
 	PlatformData.ID = InID;
 	PlatformData.OwnerTeam = InTeam;
-}
-
-void ABaseActor::WH_FUN(float speed, int32 num)
-{
-	OriginHelper::Debug_ScreenMessage(TEXT("TestReflection"));
-	FunNames.Add("");
 }

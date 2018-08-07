@@ -7,6 +7,7 @@
 #include "Engine/World.h"
 #include "SQBGameInstance.generated.h"
 
+class ABaseActor;
 /**
  *  游戏Instance类，用于BaseActor之间的通信,是通信的中间类
  */
@@ -20,10 +21,10 @@ public:
 	
 public:
 	/** 注册BaseActor，以便相互之间的通信*/
-	void RegisterSQBActor(class ABaseActor* InRef);
+	void RegisterSQBActor(ABaseActor* InRef);
 
 	/** 注销列表中存在的Actor，此时该Actor已被摧毁或者不参与通信交互*/
-	void UnRegisterSQBActor(class ABaseActor* InRef);
+	void UnRegisterSQBActor(ABaseActor* InRef);
 
 	template<class T>
 	bool SpawnSQBActor(UClass* InClass, FVector const* Location = NULL, FRotator const* Rotation = NULL, const FActorSpawnParameters& SpawnParameters = FActorSpawnParameters())
@@ -41,7 +42,9 @@ public:
 	}
 	
 	/** 获取所有BaseActor的ID名*/
-	TArray<FName> GetData_AllOtherName(FName& PlatformID, class ABaseActor* ActorRef);
+	TArray<FName> GetData_AllOtherName(FName& PlatformID, ABaseActor* ActorRef);
+
+	void SendPosInfo(ABaseActor* Sender, ABaseActor* Receiver);
 
 private:
 	TArray<class ABaseActor*> AllSQBActor;
