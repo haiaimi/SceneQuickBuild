@@ -5,6 +5,8 @@
 #include "OriginHelper.h"
 #include "SceneQuickBuildType.generated.h"
 
+extern TArray<UFunction*> GlobalModuleFunctions;
+
 /**
 * 该项目中常用的宏，类型，枚举，结构等等
 */
@@ -42,6 +44,13 @@ DECLARE_MULTICAST_DELEGATE_OneParam(FMessagePublish, FString&);
 #define WH_ARG6(f,t,v,...) WH_ARG2(f,t,v) SEPATATOR_1 EXPAND(WH_ARG4(f,##__VA_ARGS__))
 #define WH_ARG8(f,t,v,...) WH_ARG2(f,t,v) SEPATATOR_1 EXPAND(WH_ARG6(f,##__VA_ARGS__))
 
+/**遍历赋值*/
+#define WH_ARG_DATA0()
+#define WH_ARG_DATA2(f,t,v) f(t,v)
+#define WH_ARG_DATA4(f,t,v,...) WH_ARG_DATA2(f,t,v) SEPATATOR_2 EXPAND(WH_ARG_DATA2(f,##__VA_ARGS__))
+#define WH_ARG_DATA6(f,t,v,...) WH_ARG_DATA2(f,t,v) SEPATATOR_2 EXPAND(WH_ARG_DATA4(f,##__VA_ARGS__))
+#define WH_ARG_DATA8(f,t,v,...) WH_ARG_DATA2(f,t,v) SEPATATOR_2 EXPAND(WH_ARG_DATA6(f,##__VA_ARGS__))
+
 #define WH_ODD_FUN(t,v) t
 #define WH_EVEN_FUN(t,v) v
 #define WH_EVEN_CUSTOM_FUN_(t,v) InData->##v
@@ -53,16 +62,6 @@ PlatformData.##v=v
 		EXPAND(WH_CONCAT(v, WH_ARG_COUNT(__VA_ARGS__))(f,##__VA_ARGS__))
 #define WH_ODD_EVEN_ARG(v,f,...) \
 		WH_ODD_EVEN_ARG_(v,f,##__VA_ARGS__)
-
-/**遍历赋值*/
-#define WH_ARG_DATA0()
-#define WH_ARG_DATA2(f,t,v) f(t,v)
-#define WH_ARG_DATA4(f,t,v,...) WH_ARG_DATA2(f,t,v) SEPATATOR_2 EXPAND(WH_ARG_DATA2(f,##__VA_ARGS__))
-#define WH_ARG_DATA6(f,t,v,...) WH_ARG_DATA2(f,t,v) SEPATATOR_2 EXPAND(WH_ARG_DATA4(f,##__VA_ARGS__))
-#define WH_ARG_DATA8(f,t,v,...) WH_ARG_DATA2(f,t,v) SEPATATOR_2 EXPAND(WH_ARG_DATA6(f,##__VA_ARGS__))
-
-#define WH_EVEN_CUSTOM_DATA_FUN(t,v)\
-PlatformData.##v=v
 
 /**遍历多参数列表*/
 #define WH_DOARG0(o)
@@ -101,14 +100,21 @@ int32 CustomFunCounts=FunCount;
 
 /**识别方法名以便后面的使用*/
 #define WH_FUN_DEFINE_IMPLEMENT()\
+if (GlobalBindFunctions.Num() == 0)\
 {\
-	FunNames.Reset(); \
+	GlobalBindFunctions.Reset();\
 	int64* StartPoint = &this->DefineStart;\
-	FString* StrPoint = (FString*)(++StartPoint);\
+	FString* StrPoint = nullptr;\
+	BindFunctionPtr* FunPoint = nullptr;\
+	StartPoint++;\
 	for (int32 i = 0; i < CustomFunCounts; ++i)\
 	{\
-		FunNames.Add(*StrPoint);\
-		StrPoint = StrPoint + 4;\
+		StrPoint = (FString*)(StartPoint);\
+		StartPoint += 2;\
+		FunPoint = (BindFunctionPtr*)(StartPoint);\
+		StartPoint += 11;\
+		GlobalBindFunctions.Add(FName(**StrPoint), *FunPoint);\
+		OriginHelper::Debug_ScreenMessage(MoveTemp(*StrPoint),10);\
 	}\
 }
 
@@ -118,6 +124,7 @@ typedef ClassName::F##FunName##Delegate F##FunName##Delegate;
 
 #define WH_FUN_DEFINE(FunName,RetType,...)\
 FString FunName##_STR=TEXT(#FunName);\
+BindFunctionPtr FunName##BindPointer=&ABaseActor::Bind##FunName;\
 FUNC_DECLARE_DELEGATE(F##FunName##Delegate,RetType,EXPAND(WH_ODD_EVEN_ARG(WH_ARG,WH_ODD_FUN, ##__VA_ARGS__))); \
 F##FunName##Delegate FunName##Delegate; \
 \
@@ -149,9 +156,11 @@ void FunName##_Publish(void* InArg)\
 	}\
 }\
 \
+UFUNCTION()\
 void Bind##FunName(ABaseActor* BindActor)\
 {\
 	FunName##Delegate.BindUObject(BindActor,&ABaseActor::##FunName);\
+	OriginHelper::Debug_ScreenMessage(TEXT("Bind Actor"),5);\
 }
 
 /**多参数列表测试代码*/
