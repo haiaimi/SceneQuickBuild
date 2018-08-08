@@ -6,20 +6,13 @@
 
 UCommunicationManager::UCommunicationManager()
 {
-	//ABaseActor::MyStruct A;
-	//FWH_FUN B;
+	
 }
 
-void UCommunicationManager::BuildCommunication(class ABaseActor* PublishActor, class ABaseActor* SubscribeActor)
+void UCommunicationManager::BuildCommunication(class ABaseActor* PublishActor, class ABaseActor* SubscribeActor, FString& FunName)
 {
-	FUNC_DECLARE_DELEGATE(FDelegate1, void, int, float);
-	FUNC_DECLARE_DELEGATE(FDelegate2, float, int, float);
-
-	FDelegate2 a;
-	FDelegate1 b;
-	if(a.IsBound())
+	if (BindFunctionPtr* FindRes = GlobalBindFunctions.Find(FName(*FunName)))
 	{
-		a.Execute(10, 10);
+		(PublishActor->**FindRes)(SubscribeActor);   //执行该函数指针，进行绑定
 	}
-	//TPair<ABaseActor::MyStruct,UFunction*>
 }

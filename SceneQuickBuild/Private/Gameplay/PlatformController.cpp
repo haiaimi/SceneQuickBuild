@@ -58,9 +58,11 @@ void APlatformController::BeginPlay()
 			test->GetOuter()->ProcessEvent(test, (void*)(&params));
 			//OriginHelper::Debug_ScreenMessage(FString::FormatAsNumber(params.Return));
 			//delete Frame;
-
-			FMessagePublish Publisher;
 		}
+
+		UFunction* ActorFun = ABaseActor::StaticClass()->FindFunctionByName(TEXT("BindTest"));
+		if (ActorFun)
+			OriginHelper::Debug_ScreenMessage(TEXT("Process Fun"));
 	}
 
 	FInputModeGameOnly InputMode;

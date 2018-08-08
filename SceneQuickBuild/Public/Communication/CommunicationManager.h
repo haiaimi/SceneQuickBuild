@@ -19,5 +19,5 @@ public:
 
 public:
 	/** 构建SQBActor之间的通信*/
-	void BuildCommunication(class ABaseActor* PublishActor, class ABaseActor* SubscribeActor);
+	void BuildCommunication(class ABaseActor* PublishActor, class ABaseActor* SubscribeActor, FString& FunName);
 };
