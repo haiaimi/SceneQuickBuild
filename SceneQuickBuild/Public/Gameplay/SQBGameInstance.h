@@ -46,8 +46,10 @@ public:
 
 	void SendPosInfo(ABaseActor* Sender, ABaseActor* Receiver);
 
+public:
+
 private:
-	TArray<class ABaseActor*> AllSQBActor;
+	TArray<ABaseActor*> AllSQBActor;
 
 	/**所有SQBActor相关的数据*/
 	TArray<struct FPlatformData*> AllSQBData;

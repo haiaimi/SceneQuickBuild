@@ -34,5 +34,7 @@ void USQBGameInstance::SendPosInfo(ABaseActor* Sender, ABaseActor* Receiver)
 {
 	FSendPosInfo Param;
 	Sender->BindSendPosInfo(Receiver);
+	Param.PlatformPos = FVector(10.f, 10.f, 10.f);
+	Sender->SendPosInfo_Publish(&Param);
 }
 
