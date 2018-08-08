@@ -7,6 +7,9 @@
 #include "GameFramework/Pawn.h"
 #include "BaseActor.generated.h"
 
+typedef void(ABaseActor::*BindFunctionPtr)(ABaseActor*);
+extern TMap<FName, BindFunctionPtr> GlobalBindFunctions;     //全局函数指针（绑定对象的函数指针）
+
 /**
   * 场景中所有模块的基类，包括基本的控制模式，及模块的一些通用属性
   */
@@ -74,12 +77,14 @@ public:
 	WH_FUN_DEFINE_BEGIN();
 
 	WH_FUN_DEFINE(SendPosInfo, void, FVector, PlatformPos);
+
+	WH_FUN_DEFINE(SendID, void, FName, ID);
 	
 	//WH_FUN_DEFINE(WH_FUN, void, float, speed, int, num);
 	//
 	//WH_FUN_DEFINE(WH_FUN_1, void, FVector, speed, int32, num, bool, visible);
 
-	WH_FUN_DEFINE_END(1);
+	WH_FUN_DEFINE_END(2);
 
 	/*void PublishMessage();
 
@@ -88,6 +93,11 @@ public:
 	GET_SPECIFIED_PLATFORM_DATA(PlatformData.ID, TArray<FName>, AllOtherName, this);
 
 	//BUILD_COMMUNICATE(a, a, FTest, Test, float, int);
+
+	UFUNCTION()
+	void BindTest() {};
+	void BindTest2(UObject* Context, FFrame& TheStack, RESULT_DECL) {};
+	void BindTest3(ABaseActor* ) {};
 	
 public:
 	/**外部通信模式*/
@@ -115,3 +125,4 @@ private:
 };
 
 WH_CUSTOM_FUN_FINISH(ABaseActor, SendPosInfo, 2);
+WH_CUSTOM_FUN_FINISH(ABaseActor, SendID, 3);

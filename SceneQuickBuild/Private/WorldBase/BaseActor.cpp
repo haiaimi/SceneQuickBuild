@@ -6,7 +6,8 @@
 #include "Components/InputComponent.h"
 #include "GameFramework/PlayerInput.h"
 
-FName FunName = FName(TEXT("First"), 1);
+TArray<UFunction*> GlobalModuleFunctions = { nullptr };
+TMap<FName, BindFunctionPtr> GlobalBindFunctions = {};
 
 ABaseActor::ABaseActor():
 	CommunicateType(EOutsideCommunicate::ELoadConfigFile_Json),    //默认是读取Json文件的方式
@@ -39,15 +40,9 @@ void ABaseActor::BeginPlay()
 	//OriginHelper::Debug_ScreenMessage(FString::SanitizeFloat(PlatformData.Speed.Plane_Speed));
 	//OriginHelper::Debug_ScreenMessage(FString::FormatAsNumber(a + b));
 
-	if (FName(TEXT("First"), 1, EFindName::FNAME_Find) != NAME_None)
-	{
-		FString A = FName(TEXT("First"), 1, EFindName::FNAME_Find).ToString();
-		//OriginHelper::Debug_ScreenMessage(MoveTemp(A),5);
-	}
-
 	FString str(TEXT("i'm very fine,how are you,test fstring length"));
 
-	OriginHelper::Debug_ScreenMessage(FString::FormatAsNumber(sizeof(str)), 10);
+	//OriginHelper::Debug_ScreenMessage(FString::FormatAsNumber(sizeof(str)), 10);
 
 	//OriginHelper::Debug_ScreenMessage(FString::FormatAsNumber(sizeof(ABaseActor)-sizeof(APawn)),10);
 	/*int32* a = (int32*)&this->a1;
@@ -59,21 +54,28 @@ void ABaseActor::BeginPlay()
 	OriginHelper::Debug_ScreenMessage(FString::Printf(TEXT("%p"), &this->WH_FUN_STR), 5);
 	OriginHelper::Debug_ScreenMessage(MoveTemp(*(FString*)(++StartPoint)),5);*/
 
-	FunNames.Reset();
-	int64* StartPoint = &this->DefineStart;
-	FString* StrPoint = (FString*)(++StartPoint);
-	for (int32 i = 0; i < CustomFunCounts; ++i)
-	{
-		FunNames.Add(*StrPoint);
-		StrPoint = StrPoint + 4;
-	}
-	UEnum* a = FindObject<UEnum>(ANY_PACKAGE, TEXT("EFunctionName"));
+	WH_FUN_DEFINE_IMPLEMENT();
+
+	//BindFunctionPtr* Temp = GlobalBindFunctions.Find(FName(TEXT("SendID")));
+	(this->**GlobalBindFunctions.Find(FName(TEXT("SendID"))))(this);
+
+	BindFunctionPtr ab = &ABaseActor::BindSendID;
+	OriginHelper::Debug_ScreenMessage(FString::Printf(TEXT("Function Pointer Width: %d"),sizeof(ab)),10);
+	OriginHelper::Debug_ScreenMessage(FString::Printf(TEXT("%p"), &SendPosInfoBindPointer),10);
+	OriginHelper::Debug_ScreenMessage(FString::Printf(TEXT("%p"), &SendIDBindPointer),10);
+	
+	/*OriginHelper::Debug_ScreenMessage(FString::Printf(TEXT("%p"), &SendPosInfo_STR), 20);
+	OriginHelper::Debug_ScreenMessage(FString::Printf(TEXT("%p"), &SendID_STR), 20);
+	OriginHelper::Debug_ScreenMessage(FString::FormatAsNumber(sizeof(FSendIDDelegate)), 5);
+	OriginHelper::Debug_ScreenMessage(FString::FormatAsNumber(sizeof(FSendPosInfoDelegate)), 5);*/
+	
+	/*UEnum* a = FindObject<UEnum>(ANY_PACKAGE, TEXT("EFunctionName"));
 	TArray<TPair<FName, int64>> EnumElems;
 	EnumElems.Add(TPair<FName, int64>(TEXT("WH_FUN"), 0));
 	EnumElems.Add(TPair<FName, int64>(TEXT("WH_FUN_1"), 1));
-	a->SetEnums(EnumElems, UEnum::ECppForm::Namespaced, false);
+	a->SetEnums(EnumElems, UEnum::ECppForm::Namespaced, false);*/
 	
-	OriginHelper::Debug_ScreenMessage(a->GetNameByIndex(0).ToString(), 5);
+	//OriginHelper::Debug_ScreenMessage(a->GetNameByIndex(0).ToString(), 5);
 	//a->SetEnums()
 	//UScriptStruct*  b;
 	
