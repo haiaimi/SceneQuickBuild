@@ -8,6 +8,8 @@
 
 TArray<UFunction*> GlobalModuleFunctions = { nullptr };
 TMap<FName, BindFunctionPtr> GlobalBindFunctions = {};
+TMap<FName, RemoveDelegatePtr> GlobalRemoveDelegates = {};
+typedef void(*funPtr)(int32, int32);
 
 ABaseActor::ABaseActor():
 	CommunicateType(EOutsideCommunicate::ELoadConfigFile_Json),    //默认是读取Json文件的方式
@@ -40,8 +42,6 @@ void ABaseActor::BeginPlay()
 	//OriginHelper::Debug_ScreenMessage(FString::SanitizeFloat(PlatformData.Speed.Plane_Speed));
 	//OriginHelper::Debug_ScreenMessage(FString::FormatAsNumber(a + b));
 
-	FString str(TEXT("i'm very fine,how are you,test fstring length"));
-
 	//OriginHelper::Debug_ScreenMessage(FString::FormatAsNumber(sizeof(str)), 10);
 
 	//OriginHelper::Debug_ScreenMessage(FString::FormatAsNumber(sizeof(ABaseActor)-sizeof(APawn)),10);
@@ -57,12 +57,16 @@ void ABaseActor::BeginPlay()
 	WH_FUN_DEFINE_IMPLEMENT();
 
 	//BindFunctionPtr* Temp = GlobalBindFunctions.Find(FName(TEXT("SendID")));
-	(this->**GlobalBindFunctions.Find(FName(TEXT("SendID"))))(this);
-
+	//(this->**GlobalBindFunctions.Find(FName(TEXT("SendID"))))(this);
+	
 	BindFunctionPtr ab = &ABaseActor::BindSendID;
-	OriginHelper::Debug_ScreenMessage(FString::Printf(TEXT("Function Pointer Width: %d"),sizeof(ab)),10);
-	OriginHelper::Debug_ScreenMessage(FString::Printf(TEXT("%p"), &SendPosInfoBindPointer),10);
-	OriginHelper::Debug_ScreenMessage(FString::Printf(TEXT("%p"), &SendIDBindPointer),10);
+	//OriginHelper::Debug_ScreenMessage(FString::Printf(TEXT("Function Pointer Width: %d"),sizeof(ab)),10);
+	OriginHelper::Debug_ScreenMessage(FString::Printf(TEXT("Bind Function: %p"), &SendPosInfoBindPtr),10);
+
+	OriginHelper::Debug_ScreenMessage(FString::Printf(TEXT("DelegateRemove Fun: %p"), &SendPosInfoRemoveDelegatePtr),10);
+	OriginHelper::Debug_ScreenMessage(FString::Printf(TEXT("%p"), &SendIDBindPtr),10);
+
+	OriginHelper::Debug_ScreenMessage(FString::FormatAsNumber(sizeof(BindFunctionPtr)),10);
 	
 	/*OriginHelper::Debug_ScreenMessage(FString::Printf(TEXT("%p"), &SendPosInfo_STR), 20);
 	OriginHelper::Debug_ScreenMessage(FString::Printf(TEXT("%p"), &SendID_STR), 20);

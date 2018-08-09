@@ -3,12 +3,15 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "SceneQuickBuildType.h"
 #include "GameFramework/Pawn.h"
+#include "Gameplay/SQBGameInstance.h"
 #include "BaseActor.generated.h"
 
-typedef void(ABaseActor::*BindFunctionPtr)(ABaseActor*);
+typedef FDelegateHandle(ABaseActor::*BindFunctionPtr)(ABaseActor*);
+typedef FDelegateHandle(ABaseActor::*GetDelegateHandlePtr)();
+typedef void(ABaseActor::*RemoveDelegatePtr)(ABaseActor*);
 extern TMap<FName, BindFunctionPtr> GlobalBindFunctions;     //全局函数指针（绑定对象的函数指针）
+extern TMap<FName, RemoveDelegatePtr> GlobalRemoveDelegates;   
 
 /**
   * 场景中所有模块的基类，包括基本的控制模式，及模块的一些通用属性
@@ -90,7 +93,7 @@ public:
 
 	void SubscribeMessage();*/
 
-	GET_SPECIFIED_PLATFORM_DATA(PlatformData.ID, TArray<FName>, AllOtherName, this);
+	//GET_SPECIFIED_PLATFORM_DATA(PlatformData.ID, TArray<FName>, AllOtherName, this);
 
 	//BUILD_COMMUNICATE(a, a, FTest, Test, float, int);
 
