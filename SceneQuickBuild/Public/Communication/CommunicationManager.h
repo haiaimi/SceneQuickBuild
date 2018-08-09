@@ -1,4 +1,4 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+ï»¿// Fill out your copyright notice in the Description page of Project Settings.
 
 #pragma once
 
@@ -6,8 +6,9 @@
 #include "UObject/NoExportTypes.h"
 #include "CommunicationManager.generated.h"
 
+class ABaseActor;
 /**
- *  Í¨ĞÅ¹ÜÀíÀà£¬¿ØÖÆ³¡¾°ÖĞËùÓĞÎïÌåµÄÍ¨ĞÅ¹ØÏµ
+ *  é€šä¿¡ç®¡ç†ç±»ï¼Œæ§åˆ¶åœºæ™¯ä¸­æ‰€æœ‰ç‰©ä½“çš„é€šä¿¡å…³ç³»
  */
 UCLASS()
 class SCENEQUICKBUILD_API UCommunicationManager : public UObject
@@ -18,6 +19,9 @@ public:
 	UCommunicationManager();
 
 public:
-	/** ¹¹½¨SQBActorÖ®¼äµÄÍ¨ĞÅ*/
-	void BuildCommunication(class ABaseActor* PublishActor, class ABaseActor* SubscribeActor, FString& FunName);
+	/** æ„å»ºSQBActorä¹‹é—´çš„é€šä¿¡*/
+	void BuildCommunication(ABaseActor* Sender, ABaseActor* Receiver, FString& FunName);
+
+	/** ç»“æŸé€šä¿¡*/
+	void BreakCommunication(ABaseActor* Sender, ABaseActor* Receiver, FString FunName);
 };
