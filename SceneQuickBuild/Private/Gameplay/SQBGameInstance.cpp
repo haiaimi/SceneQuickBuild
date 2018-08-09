@@ -1,12 +1,24 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 #include "SQBGameInstance.h"
-#include "BaseActor.h"
 #include "OriginHelper.h"
+#include "BaseActor.h" 
 
-USQBGameInstance::USQBGameInstance()
+
+USQBGameInstance::USQBGameInstance():
+	CommunicationManager(nullptr)
 {
 	
+}
+
+void USQBGameInstance::StartGameInstance()
+{
+	if (CommunicationManager == nullptr)
+		CommunicationManager = NewObject<UCommunicationManager>(this);
+
+	CommunicationManager->BreakCommunication(nullptr, nullptr, FString(TEXT("SendID")));
+
+	Super::StartGameInstance();
 }
 
 void USQBGameInstance::RegisterSQBActor(class ABaseActor* InRef)
@@ -32,9 +44,17 @@ TArray<FName> USQBGameInstance::GetData_AllOtherName(FName& PlatformID, class AB
 
 void USQBGameInstance::SendPosInfo(ABaseActor* Sender, ABaseActor* Receiver)
 {
-	FSendPosInfo Param;
-	Sender->BindSendPosInfo(Receiver);
-	Param.PlatformPos = FVector(10.f, 10.f, 10.f);
-	Sender->SendPosInfo_Publish(&Param);
+	FSendPosInfo Temp;
+}
+
+void USQBGameInstance::SendPosInfo_Implementation(ABaseActor* Sender, void* InParams)
+{
+	FSendPosInfo Temp;
+	if (InParams)
+	{
+		
+	}
+
+	Sender->SendPosInfo_Publish(&Temp);
 }
 

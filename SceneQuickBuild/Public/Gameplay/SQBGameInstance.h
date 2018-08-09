@@ -5,9 +5,13 @@
 #include "CoreMinimal.h"
 #include "Engine/GameInstance.h"
 #include "Engine/World.h"
+#include "SceneQuickBuildType.h"
+#include "CommunicationManager.h"
 #include "SQBGameInstance.generated.h"
 
 class ABaseActor;
+class UCommunicationManager;
+
 /**
  *  游戏Instance类，用于BaseActor之间的通信,是通信的中间类
  */
@@ -18,6 +22,8 @@ class SCENEQUICKBUILD_API USQBGameInstance : public UGameInstance
 	
 public:
 	USQBGameInstance();
+
+	virtual void StartGameInstance()override;
 	
 public:
 	/** 注册BaseActor，以便相互之间的通信*/
@@ -45,7 +51,9 @@ public:
 	TArray<FName> GetData_AllOtherName(FName& PlatformID, ABaseActor* ActorRef);
 
 	void SendPosInfo(ABaseActor* Sender, ABaseActor* Receiver);
-
+	 
+	WH_COMMUNICATE_IMPLEMENT(SendPosInfo);
+	
 public:
 
 private:
@@ -53,4 +61,7 @@ private:
 
 	/**所有SQBActor相关的数据*/
 	TArray<struct FPlatformData*> AllSQBData;
+
+	/**内部通信管理类*/
+	UCommunicationManager* CommunicationManager;
 };

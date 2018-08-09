@@ -4,6 +4,7 @@
 #include "FlightPlatform.h"
 #include "Engine/World.h"
 #include "OriginHelper.h"
+#include "SQBGameInstance.h"
 
 // Sets default values
 APlatformController::APlatformController()
@@ -68,11 +69,12 @@ void APlatformController::BeginPlay()
 	FInputModeGameOnly InputMode;
 	SetInputMode(InputMode);
 
-	TArray<FName> Result = ControlPlatform->GetData_AllOtherName();
-	for (auto Iter = TArray<FName>::TIterator(Result); Iter; ++Iter)
-	{
-		//OriginHelper::Debug_ScreenMessage((*Iter).ToString());
-	}
+	//TArray<FName> Result = ControlPlatform->GetData_AllOtherName();
+	//for (auto Iter = TArray<FName>::TIterator(Result); Iter; ++Iter)
+	//{
+	//	//OriginHelper::Debug_ScreenMessage((*Iter).ToString());
+	//}
+
 }
 
 // Called every frame
