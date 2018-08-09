@@ -1,7 +1,6 @@
 ﻿// Fill out your copyright notice in the Description page of Project Settings.
 #pragma once
 #include "CoreMinimal.h"
-#include "Gameplay/SQBGameInstance.h"
 #include "OriginHelper.h"
 #include "SceneQuickBuildType.generated.h"
 
@@ -100,20 +99,25 @@ int32 CustomFunCounts=FunCount;
 
 /**识别方法名以便后面的使用*/
 #define WH_FUN_DEFINE_IMPLEMENT()\
-if (GlobalBindFunctions.Num() == 0)\
+if (GlobalBindFunctions.Num() == 0 && GlobalRemoveDelegates.Num()==0)\
 {\
 	GlobalBindFunctions.Reset();\
+	GlobalRemoveDelegates.Reset();\
 	int64* StartPoint = &this->DefineStart;\
 	FString* StrPoint = nullptr;\
 	BindFunctionPtr* FunPoint = nullptr;\
+	RemoveDelegatePtr* RemoveDelegatePoint = nullptr;\
 	StartPoint++;\
 	for (int32 i = 0; i < CustomFunCounts; ++i)\
 	{\
 		StrPoint = (FString*)(StartPoint);\
 		StartPoint += 2;\
 		FunPoint = (BindFunctionPtr*)(StartPoint);\
-		StartPoint += 11;\
+		StartPoint += 2;\
+		RemoveDelegatePoint=(RemoveDelegatePtr*)(StartPoint);\
+		StartPoint += 17;\
 		GlobalBindFunctions.Add(FName(**StrPoint), *FunPoint);\
+		GlobalRemoveDelegates.Add(FName(**StrPoint), *RemoveDelegatePoint);\
 		OriginHelper::Debug_ScreenMessage(MoveTemp(*StrPoint),10);\
 	}\
 }
@@ -123,9 +127,11 @@ typedef ClassName::F##FunName F##FunName;\
 typedef ClassName::F##FunName##Delegate F##FunName##Delegate;
 
 #define WH_FUN_DEFINE(FunName,RetType,...)\
-FString FunName##_STR=TEXT(#FunName);\
-BindFunctionPtr FunName##BindPointer=&ABaseActor::Bind##FunName;\
-FUNC_DECLARE_DELEGATE(F##FunName##Delegate,RetType,EXPAND(WH_ODD_EVEN_ARG(WH_ARG,WH_ODD_FUN, ##__VA_ARGS__))); \
+FString FunName##_STR=#FunName;\
+BindFunctionPtr FunName##BindPtr=&ABaseActor::Bind##FunName;\
+RemoveDelegatePtr FunName##RemoveDelegatePtr=&ABaseActor::Remove##FunName##Delegate;\
+FDelegateHandle FunName##DelegateHandle;\
+FUNC_DECLARE_MULTICAST_DELEGATE(F##FunName##Delegate,RetType,EXPAND(WH_ODD_EVEN_ARG(WH_ARG,WH_ODD_FUN, ##__VA_ARGS__))); \
 F##FunName##Delegate FunName##Delegate; \
 \
 struct WH_CONCAT(F,FunName) \
@@ -151,17 +157,36 @@ void FunName##_Publish(void* InArg)\
 		F##FunName* InData = static_cast<F##FunName*>(InArg);\
 		if(FunName##Delegate.IsBound() && InData)\
 		{\
-			FunName##Delegate.Execute(EXPAND(WH_ODD_EVEN_ARG(WH_ARG,WH_EVEN_CUSTOM_FUN, ##__VA_ARGS__)));\
+			FunName##Delegate.Broadcast(EXPAND(WH_ODD_EVEN_ARG(WH_ARG,WH_EVEN_CUSTOM_FUN, ##__VA_ARGS__)));\
 		}\
 	}\
 }\
 \
 UFUNCTION()\
-void Bind##FunName(ABaseActor* BindActor)\
+FDelegateHandle Bind##FunName(ABaseActor* BindActor)\
 {\
-	FunName##Delegate.BindUObject(BindActor,&ABaseActor::##FunName);\
 	OriginHelper::Debug_ScreenMessage(TEXT("Bind Actor"),5);\
+	BindActor->FunName##DelegateHandle=FunName##Delegate.AddUObject(BindActor,&ABaseActor::##FunName);\
+	return BindActor->FunName##DelegateHandle; \
+}\
+void Remove##FunName##Delegate(ABaseActor* Receiver)\
+{\
+	FunName##Delegate.Remove(Receiver->FunName##DelegateHandle);\
 }
+
+/**具体通信的实现*/
+#define WH_COMMUNICATE_IMPLEMENT(CommunicateName)\
+void CommunicateName##_BuildCommunication(ABaseActor* Sender,ABaseActor* Receiver,FString FunName=#CommunicateName)\
+{\
+	if(CommunicationManager)\
+		CommunicationManager->BuildCommunication(Sender,Receiver,FunName);\
+};\
+void CommunicateName##_BreakCommunication(ABaseActor* Sender,ABaseActor* Receiver,FString FunName=#CommunicateName)\
+{\
+	if(CommunicationManager)\
+		CommunicationManager->BreakCommunication(Sender, Receiver, FunName);\
+};\
+void CommunicateName##_Implementation(ABaseActor* Sender,void* InParams);
 
 /**多参数列表测试代码*/
 #define WH_TEST1__(v1,v2,...) \
@@ -177,20 +202,20 @@ EXPAND(WH_TEST1__(##__VA_ARGS__))
 PlatformData.Speed.arg1##_Speed=arg1;
 #define WH_ARGNAME(arg1)WH_ARGNAME_(arg1)
 
-#define GET_SPECIFIED_PLATFORM_DATA(PlatformID, DataType, DataName, ActorRef) \
-DataType GetData_##DataName()     \
-{     \
-	DataType Temp;   \
-	if(GetWorld())  \
-	{  \
-		if (USQBGameInstance* GameInstance = Cast<USQBGameInstance>(GetWorld()->GetGameInstance()))  \
-		{            \
-			Temp = GameInstance->GetData_##DataName(PlatformID, ActorRef); \
-		}           \
-	}    \
-	return Temp;     \
-\
-}
+//#define GET_SPECIFIED_PLATFORM_DATA(PlatformID, DataType, DataName, ActorRef) \
+//DataType GetData_##DataName()     \
+//{     \
+//	DataType Temp;   \
+//	if(GetWorld())  \
+//	{  \
+//		if (USQBGameInstance* GameInstance = Cast<USQBGameInstance>(GetWorld()->GetGameInstance()))  \
+//		{            \
+//			Temp = GameInstance->GetData_##DataName(PlatformID, ActorRef); \
+//		}           \
+//	}    \
+//	return Temp;     \
+//\
+//}
 
 //#define BUILD_COMMUNICATE(PublishActor, SubscribeActor, DelegateName, DelegateInstance, ...)  \
 //FUNC_DECLARE_DELEGATE(DelegateName, ...)  \
