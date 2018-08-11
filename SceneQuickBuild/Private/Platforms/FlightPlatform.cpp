@@ -7,23 +7,34 @@
 #include "Camera/CameraComponent.h"
 #include "ConstructorHelpers.h"
 #include "GameFramework/PawnMovementComponent.h"
+#include "GameFramework/PlayerInput.h"
+#include "DrawDebugHelpers.h"
+#include "GameFramework/FloatingPawnMovement.h"
+#include "Components/BoxComponent.h"
 
 
-AFlightPlatform::AFlightPlatform()
+AFlightPlatform::AFlightPlatform(const FObjectInitializer& ObjectInitializer)
+	:Super(ObjectInitializer.SetDefaultSubobjectClass<UFloatingPawnMovement>(TEXT("ModuleMovement")))
 {
+	PlaneCapsule = CreateDefaultSubobject<UBoxComponent>(TEXT("PlaneCollision"));
+	PlaneCapsule->SetupAttachment(BaseScene);
+	PlaneCapsule->SetBoxExtent(FVector(100.f, 46.f, 22.f));
+	PlaneCapsule->SetCollisionResponseToAllChannels(ECR_Block);
+	RootComponent = PlaneCapsule;
+
 	PlaneMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("PlaneMesh"));
-	PlaneMesh->SetupAttachment(BaseScene);
+	PlaneMesh->SetupAttachment(PlaneCapsule);
+	PlaneMesh->SetCollisionObjectType(ECollisionChannel::ECC_WorldDynamic);
 	PlaneMesh->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Block);
 	PlaneMesh->SetRelativeRotation(FRotator(0.f, -90.f, 0.f));
-	ModuleMovement->SetUpdatedComponent(BaseScene);
+	PlaneMesh->SetRelativeLocation(FVector(0.f, 0.f, -20.f));
+	
+	ModuleMovement->SetUpdatedComponent(PlaneCapsule);
 	ViewCamera->SetupAttachment(PlaneMesh, TEXT("CameraSocket"));
-
 	static ConstructorHelpers::FObjectFinder<UStaticMesh> MeshFinder(TEXT("/Game/Plane/CGModel/F18C/F-18C_Hornet"));
 	if (!ensure(MeshFinder.Succeeded()))return;
 	PlaneMesh->SetStaticMesh(MeshFinder.Object);
 	PlatformType = EPlatformCategory::EPlane;
-	//PlatformMovementComponent = CreateDefaultSubobject<UMovementComponent>(TEXT("PlatformMovementComponent"));
-	//PlatformMovementComponent->SetUpdatedComponent(PlaneMesh);
 
 	PlatformData.ID = TEXT("Plane");
 }
@@ -41,30 +52,29 @@ void AFlightPlatform::BeginPlay()
 	SerializeEnumsToJson(TEXT("PlaneModlues"), EPlatformModule, EnumsResult);
 	OriginHelper::FinishSerizlize(TEXT("Test.json"));
 	OriginHelper::ResetJson();
+}
 
-	//OriginHelper::Debug_ScreenMessage(FString::FormatAsNumber(PlatformData->FlySpeed), 10.f);
-	FPlatformData test;
-	test.Speed.Plane_Speed = 5.f;
-	test.Speed.Ship_Speed = 10.f;
+void AFlightPlatform::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
+{
+	Super::SetupPlayerInputComponent(PlayerInputComponent);
 
-	//OriginHelper::Debug_ScreenMessage(FString::SanitizeFloat(test.Speed.Plane_Speed));
-	//OriginHelper::Debug_ScreenMessage(FString::SanitizeFloat(test.Speed.Ship_Speed));
+	//设置飞行平台额外交互方式
+	//飞机向上或向下
+	UPlayerInput::AddEngineDefinedAxisMapping(FInputAxisKeyMapping("FlyPlatformUp", EKeys::Up, 1.f));
+	UPlayerInput::AddEngineDefinedAxisMapping(FInputAxisKeyMapping("FlyPlatformUp", EKeys::Down, -1.f));
 
-	class A
-	{
-		//int a;
-
-		A() {};
-		virtual ~A() {}
-
-	};
-	OriginHelper::Debug_ScreenMessage(FString::FormatAsNumber(sizeof(float)));
+	PlayerInputComponent->BindAxis(TEXT("FlyPlatformUp"), this, &AFlightPlatform::MoveUp);
 }
 
 void AFlightPlatform::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
+	AddMovementInput(GetActorRotation().Vector());
+	SetMaxSpeed(FlySpeed*DeltaTime);
+	OriginHelper::Debug_ScreenMessage(FString::SanitizeFloat(GetToCenterSubAngle()));
+
+	if (FlySpeed < 10000.f)return;
 	// 飞机飞行时的晃动，提高真实性
 	static float ShakeTime = 0.f;
 	static float AddDir = 1.f;
@@ -82,14 +92,6 @@ void AFlightPlatform::Tick(float DeltaTime)
 	ViewCamera->SetRelativeLocation(FVector(0.f, ShakeTime * 0.7f, CurRelHeight)*2.f);
 
 	ShakeTime += DeltaTime * AddDir;
-
-	AddMovementInput(GetActorRotation().Vector());
-	SetMaxSpeed(FlySpeed*DeltaTime);
-	/*FName ID(TEXT("Plane_1"));
-	FName ID2(TEXT("Plane_2"));
-	OriginHelper::Debug_ScreenMessage(FString::FormatAsNumber(ID.GetNumber()));
-	OriginHelper::Debug_ScreenMessage(FString::FormatAsNumber(ID2.GetNumber()));*/
-
 }
 
 void AFlightPlatform::BeginDestroy()
@@ -144,13 +146,7 @@ void AFlightPlatform::SetToJsonMode()
 
 void AFlightPlatform::SetToXmlMode()
 {
-	//FFlightData* a = new FFlightData();
-	//FPlatformData* b = a;
-	//FFlightData* c = static_cast<FFlightData*>(b);
-	//OriginHelper::Debug_ScreenMessage(FString::Printf(TEXT("Address: %d"), a),10.f);
-	//OriginHelper::Debug_ScreenMessage(FString::Printf(TEXT("Address: %d"), b),10.f);
-
-	//delete a;
+	
 }
 
 void AFlightPlatform::Implementation_MoveForward(float Val)
@@ -162,45 +158,109 @@ void AFlightPlatform::Implementation_MoveForward(float Val)
 
 void AFlightPlatform::Implementation_MoveRight(float Val)
 {
-	static float CurOffsetAngle = 0.f;  //当前偏移的角度
 	float DeltaTime = GetWorld()->GetDeltaSeconds();
 
 	if (Val != 0.f)
 	{
 		FRotator PlaneRot = GetActorRotation();
-		const FQuat AddedAngle_Yaw(FVector(0.f, 0.f, 1.f), Val * FMath::DegreesToRadians(DeltaTime*20.f));
+		const FQuat AddedAngle_Yaw(FVector(0.f,0.f,1.f), Val * FMath::DegreesToRadians(DeltaTime*20.f));
 
 		AddActorWorldRotation(AddedAngle_Yaw);
-		if (CurOffsetAngle > -30.f && CurOffsetAngle < 30.f)
+		if (CurOffsetAngle_Right >= -30.f && CurOffsetAngle_Right <= 30.f)
 		{
-			CurOffsetAngle += Val * DeltaTime * 30.f;
+			float DeltaAngle = Val * DeltaTime * 30.f * 1.5f;
+			if (CurOffsetAngle_Right + DeltaAngle > 30.f)
+				DeltaAngle = 30 - CurOffsetAngle_Right;
+			else if (CurOffsetAngle_Right + DeltaAngle < -30.f)
+				DeltaAngle = -30.f - CurOffsetAngle_Right;
 			PlaneRot = GetActorRotation();
-			const FQuat AddedAngle_Roll(FRotationMatrix(PlaneRot).GetUnitAxis(EAxis::X), -Val * FMath::DegreesToRadians(DeltaTime*30.f*1.5f));
+			const FQuat AddedAngle_Roll(FRotationMatrix(PlaneRot).GetUnitAxis(EAxis::X), -FMath::DegreesToRadians(DeltaAngle));
 			AddActorWorldRotation(AddedAngle_Roll);
+			CurOffsetAngle_Right += DeltaAngle;
 		}
 	}
 	else
 	{
-		if (CurOffsetAngle != 0.f)
+		if (CurOffsetAngle_Right != 0.f)
 		{
+			CurOffsetAngle_Right = GetToCenterSubAngle();
 			FRotator PlaneRot = GetActorRotation();
-			float DeltaAngle = DeltaTime * (CurOffsetAngle > 0.f ? -30.f : 30.f);
-			const FQuat AddedAngle_Yaw(FRotationMatrix(PlaneRot).GetUnitAxis(EAxis::X), -FMath::DegreesToRadians(DeltaAngle*1.5f));
-			AddActorWorldRotation(AddedAngle_Yaw);
-			const float Tmp = CurOffsetAngle + DeltaAngle;
-			if (CurOffsetAngle*Tmp <= 0.f)
+			float DeltaAngle = DeltaTime * (CurOffsetAngle_Right > 0.f ? -30.f : 30.f) * 1.5f;
+			const float Tmp = CurOffsetAngle_Right + DeltaAngle;
+			if (CurOffsetAngle_Right*Tmp <= 0.f)
 			{
-				CurOffsetAngle = 0.f;
+				DeltaAngle = 0.f - CurOffsetAngle_Right;
+				CurOffsetAngle_Right = 0.f;
 			}
 			else
-				CurOffsetAngle = Tmp;
+				CurOffsetAngle_Right = Tmp;
+			const FQuat AddedAngle_Yaw(FRotationMatrix(PlaneRot).GetUnitAxis(EAxis::X), -FMath::DegreesToRadians(DeltaAngle));
+			AddActorWorldRotation(AddedAngle_Yaw);
 		}
 	}
 }
 
+void AFlightPlatform::MoveUp(float Val)
+{
+	//if (FlySpeed < 40000)return;
+	float DeltaTime = GetWorld()->GetDeltaSeconds();
+	
+	//if (Val != 0 && CurOffsetAngle_Up <= 40.f && CurOffsetAngle_Up >= -40.f)
+	//{
+	//	float DeltaAngle = Val * DeltaTime * 20.f;
+	//	
+	//	if (CurOffsetAngle_Up + DeltaAngle > 40.f)
+	//	{
+	//		DeltaAngle = 40.f - CurOffsetAngle_Up;
+	//	}
+	//	else if (CurOffsetAngle_Up + DeltaAngle < -40.f)
+	//	{
+	//		DeltaAngle = -40.f - CurOffsetAngle_Up;
+	//	}
+	//	//OriginHelper::Debug_ScreenMessage(FString::SanitizeFloat(DeltaAngle));
+	//
+	//}
+	float DeltaAngle = Val * DeltaTime * 30.f;
+	const FQuat AddedAngle_Pitch(FRotationMatrix(GetActorRotation()).GetUnitAxis(EAxis::Y), -FMath::DegreesToRadians(DeltaAngle));
+	CurOffsetAngle_Up += DeltaAngle;
+	AddActorWorldRotation(AddedAngle_Pitch);
+}
+
+void AFlightPlatform::UpdatePlatformData()
+{
+	Super::UpdatePlatformData();
+
+	const FVector TargetDir = PlatformData.PlatformPos - GetActorLocation();
+	const FVector PlainDir = GetActorRotation().Vector();
+
+}
+
 int32 AFlightPlatform::EventTest(float Speed, int32 Num)
 {
-	//OriginHelper::Debug_ScreenMessage(FString::Printf(TEXT("Speed:%f"), Speed), 5);
-
 	return Num;
+}
+
+FVector AFlightPlatform::GetUpVector()
+{ 
+	FVector Up = FRotationMatrix(GetActorRotation()).GetUnitAxis(EAxis::Z);
+	DrawDebugLine(GetWorld(), GetActorLocation(), GetActorLocation() + Up * 200, FColor::Green, false, 20.f, 0, 2.f);
+	const FQuat Temp = FQuat(FRotationMatrix(GetActorRotation()).GetUnitAxis(EAxis::X), FMath::DegreesToRadians(CurOffsetAngle_Right*1.5f));
+	Up = Temp.RotateVector(Up);
+	
+	DrawDebugLine(GetWorld(), GetActorLocation(), GetActorLocation() + Up * 200, FColor::Black, false, 5.f, 0, 2.f);
+	return Up;
+}
+
+float AFlightPlatform::GetToCenterSubAngle()
+{
+	const FMatrix PlainRotationMat = FRotationMatrix(GetActorRotation());
+	const FVector PlainUp = PlainRotationMat.GetUnitAxis(EAxis::Z);
+	const FVector PlainRight = PlainRotationMat.GetUnitAxis(EAxis::Y);
+	const FVector PlainForward = PlainRotationMat.GetUnitAxis(EAxis::X);
+
+	const FVector PlaneNormal = FVector::CrossProduct(PlainForward, FVector(0.f, 0.f, 1.f));
+	const FPlane CenterPlane(FVector::ZeroVector, PlaneNormal);
+
+	float SubAngle = FMath::RadiansToDegrees(FMath::Acos(CenterPlane.PlaneDot(PlainUp)));
+	return SubAngle - 90.f;
 }

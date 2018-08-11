@@ -7,6 +7,7 @@
 #include "FlightPlatform.generated.h"
 
 static const FString FlightConfigName(TEXT("CommonPlane.json"));
+struct FPlatformData;
 
 /**
  * 飞行平台，目前就直接继承于BaseActor，后面会抽象出Platform中间层
@@ -17,10 +18,12 @@ class SCENEQUICKBUILD_API AFlightPlatform : public ABaseActor
 	GENERATED_BODY()
 	
 public:
-	AFlightPlatform();
+	AFlightPlatform(const FObjectInitializer& ObjectInitializer);
 
 protected:
 	virtual void BeginPlay() override;
+
+	virtual void SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)override;
 
 public:	
 	virtual void Tick(float DeltaTime) override;	
@@ -42,16 +45,26 @@ public:
 
 	virtual void Implementation_MoveRight(float val);
 
+	/**飞机朝上飞行*/
+	void MoveUp(float Val);
+
+	virtual void UpdatePlatformData()override;
+
 	UFUNCTION()
 	int32 EventTest(float Speed, int32 Num);
 
+private:
+	/**获取飞行平台的向上的向量*/
+	FVector GetUpVector();
+
+	/**获取飞机恢复中心转向的角度*/
+	float GetToCenterSubAngle();
 public:
 	/**飞机网格模型*/
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 	class UStaticMeshComponent * PlaneMesh;
 
-	struct FFlightData PlatformData;
-
+	FFlightData PlatformData;
 private:
 	///该飞行平台的具体参数
 
@@ -62,6 +75,13 @@ private:
 
 	/**飞行平台的加速度*/
 	float FlyAcceleration;
+
+    float CurOffsetAngle_Right = 0.f;  
+
+	float CurOffsetAngle_Up = 0.f;
+
+	/**飞机碰撞体*/
+	class UBoxComponent* PlaneCapsule;
 	
 	/**飞行平台的各个模块，这里使用MultiMap是因为一个飞行可能有多个相同类型的模块如（导弹）*/
 	TMultiMap<EPlatformModule::Type, ABaseActor*> FlightModules;
