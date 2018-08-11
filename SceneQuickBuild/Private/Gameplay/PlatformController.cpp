@@ -5,6 +5,8 @@
 #include "Engine/World.h"
 #include "OriginHelper.h"
 #include "SQBGameInstance.h"
+#include "EngineUtils.h"
+#include "TimerManager.h"
 
 // Sets default values
 APlatformController::APlatformController()
@@ -21,7 +23,7 @@ void APlatformController::BeginPlay()
 	ControlPlatform = GetWorld()->SpawnActor<AFlightPlatform>(FVector(-225.f, 0.f, 17454.f), FRotator(0.f,0.f,0.f));
 	if (ControlPlatform)
 	{
-		Possess(ControlPlatform);
+		//Possess(ControlPlatform);
 		ControlPlatform->SetPlatformData(TEXT("Plane_1"), ESQBTeam::EPlayer);
 
 		if (USQBGameInstance* GameInstance = Cast<USQBGameInstance>(GetGameInstance()))
@@ -74,7 +76,6 @@ void APlatformController::BeginPlay()
 	//{
 	//	//OriginHelper::Debug_ScreenMessage((*Iter).ToString());
 	//}
-
 }
 
 // Called every frame
@@ -93,6 +94,7 @@ void APlatformController::SetupInputComponent()
 	if (InputComponent)
 	{
 		InputComponent->BindAction(TEXT("Quit"), EInputEvent::IE_Pressed, this, &APlatformController::Quit);
+		InputComponent->BindAction(TEXT("ToggleTarget"), EInputEvent::IE_Pressed, this, &APlatformController::ToggleTarget);
 	}
 }
 
@@ -104,4 +106,29 @@ void APlatformController::EventTest()
 void APlatformController::Quit()
 {
 	ConsoleCommand("quit");
+}
+
+void APlatformController::ToggleTarget()
+{
+	for (TActorIterator<AFlightPlatform> It(GetWorld()); It; ++It)
+	{
+		if (*It != ControlPlatform)
+		{
+			SetViewTargetWithBlend(*It, 1.f, EViewTargetBlendFunction::VTBlend_Linear);
+			FTimerDelegate Delegate;
+			Delegate.BindUObject(this, &APlatformController::PossessNewTarget);
+			GetWorldTimerManager().SetTimer(PossessHandle, Delegate, 1.f, false);
+			ControlPlatform = *It;
+			break;
+		}
+	}
+}
+
+void APlatformController::PossessNewTarget()
+{
+	if (AActor* TargetActor = GetViewTarget())
+	{
+		ABaseActor* TempTarget = Cast<ABaseActor>(TargetActor);
+		Possess(TempTarget);
+	}
 }

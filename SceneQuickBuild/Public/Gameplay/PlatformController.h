@@ -30,7 +30,14 @@ public:
 
 	void Quit();
 
+	void ToggleTarget();
+
+	UFUNCTION()
+	void PossessNewTarget();
+
 private:
 	class AFlightPlatform* ControlPlatform;
-	
+
+	/**在经过镜头转换后就开始Possess新目标*/
+	FTimerHandle PossessHandle;
 };
