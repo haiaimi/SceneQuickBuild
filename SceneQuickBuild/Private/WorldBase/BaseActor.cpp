@@ -11,7 +11,8 @@ TMap<FName, BindFunctionPtr> GlobalBindFunctions = {};
 TMap<FName, RemoveDelegatePtr> GlobalRemoveDelegates = {};
 typedef void(*funPtr)(int32, int32);
 
-ABaseActor::ABaseActor():
+ABaseActor::ABaseActor(const FObjectInitializer& ObjectInitializer):
+	Super(ObjectInitializer),
 	CommunicateType(EOutsideCommunicate::ELoadConfigFile_Json),    //默认是读取Json文件的方式
 	OwnerPltform(nullptr),
 	PlatformType(EPlatformCategory::EBaseModule)
@@ -147,4 +148,9 @@ void ABaseActor::SetPlatformData(FName InID, ESQBTeam::Type InTeam)
 {
 	PlatformData.ID = InID;
 	PlatformData.OwnerTeam = InTeam;
+}
+
+void ABaseActor::UpdatePlatformData()
+{
+
 }

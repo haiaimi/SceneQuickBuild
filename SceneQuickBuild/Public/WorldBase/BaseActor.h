@@ -13,6 +13,7 @@ typedef void(ABaseActor::*RemoveDelegatePtr)(ABaseActor*);
 extern TMap<FName, BindFunctionPtr> GlobalBindFunctions;     //全局函数指针（绑定对象的函数指针）
 extern TMap<FName, RemoveDelegatePtr> GlobalRemoveDelegates;   
 
+struct FPlatformData;
 /**
   * 场景中所有模块的基类，包括基本的控制模式，及模块的一些通用属性
   */
@@ -23,7 +24,7 @@ class SCENEQUICKBUILD_API ABaseActor : public APawn
 	
 public:	
 	// Sets default values for this actor's properties
-	ABaseActor();
+	ABaseActor(const FObjectInitializer& ObjectInitializer);
 
 protected:
 	// Called when the game starts or when spawned
@@ -89,18 +90,11 @@ public:
 
 	WH_FUN_DEFINE_END(2);
 
-	/*void PublishMessage();
-
-	void SubscribeMessage();*/
-
 	//GET_SPECIFIED_PLATFORM_DATA(PlatformData.ID, TArray<FName>, AllOtherName, this);
 
 	//BUILD_COMMUNICATE(a, a, FTest, Test, float, int);
-
-	UFUNCTION()
-	void BindTest() {};
-	void BindTest2(UObject* Context, FFrame& TheStack, RESULT_DECL) {};
-	void BindTest3(ABaseActor* ) {};
+	/**更新数据*/
+	virtual void UpdatePlatformData();
 	
 public:
 	/**外部通信模式*/
@@ -113,7 +107,9 @@ public:
 	class UCameraComponent* ViewCamera;
 
 	/** 平台信息，包含平台的一些基础信息*/
-	struct FPlatformData PlatformData;
+	FPlatformData PlatformData;
+
+	FPlatformData TempData;
 
 protected:
 	/**平台类型*/
