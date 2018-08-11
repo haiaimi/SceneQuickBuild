@@ -4,8 +4,6 @@
 #include "OriginHelper.h"
 #include "SceneQuickBuildType.generated.h"
 
-extern TArray<UFunction*> GlobalModuleFunctions;
-
 /**
 * 该项目中常用的宏，类型，枚举，结构等等
 */
@@ -176,17 +174,17 @@ void Remove##FunName##Delegate(ABaseActor* Receiver)\
 
 /**具体通信的实现*/
 #define WH_COMMUNICATE_IMPLEMENT(CommunicateName)\
-void CommunicateName##_BuildCommunication(ABaseActor* Sender,ABaseActor* Receiver,FString FunName=#CommunicateName)\
+void CommunicateName##_BuildCommunication(ABaseActor* Sender,ABaseActor* Receiver,FString FunName = #CommunicateName)\
 {\
 	if(CommunicationManager)\
 		CommunicationManager->BuildCommunication(Sender,Receiver,FunName);\
 };\
-void CommunicateName##_BreakCommunication(ABaseActor* Sender,ABaseActor* Receiver,FString FunName=#CommunicateName)\
+void CommunicateName##_BreakCommunication(ABaseActor* Sender,ABaseActor* Receiver,FString FunName = #CommunicateName)\
 {\
 	if(CommunicationManager)\
 		CommunicationManager->BreakCommunication(Sender, Receiver, FunName);\
 };\
-void CommunicateName##_Implementation(ABaseActor* Sender,void* InParams);
+void CommunicateName##_Implementation(ABaseActor* Sender, void* InParams);
 
 /**多参数列表测试代码*/
 #define WH_TEST1__(v1,v2,...) \
@@ -303,6 +301,8 @@ struct FPlatformData
 	/**平台所在位置*/
 	FVector PlatformPos;
 
+	float FlySpeed;
+
 	union PlatformData_Speed
 	{
 		float Plane_Speed;
@@ -317,6 +317,8 @@ struct FPlatformData
 		ID = TEXT("None");
 		OwnerTeam = ESQBTeam::UnKnown;
 		PlatformType = EPlatformCategory::EBaseModule;
+		PlatformPos = FVector::ZeroVector;
+		FlySpeed = 0.f;
 	}
 
 	/**拷贝构造函数*/
