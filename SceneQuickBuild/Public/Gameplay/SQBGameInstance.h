@@ -1,4 +1,4 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+ï»¿// Fill out your copyright notice in the Description page of Project Settings.
 
 #pragma once
 
@@ -13,7 +13,7 @@ class ABaseActor;
 class UCommunicationManager;
 
 /**
- *  ÓÎÏ·InstanceÀà£¬ÓÃÓÚBaseActorÖ®¼äµÄÍ¨ĞÅ,ÊÇÍ¨ĞÅµÄÖĞ¼äÀà
+ *  æ¸¸æˆInstanceç±»ï¼Œç”¨äºBaseActorä¹‹é—´çš„é€šä¿¡,æ˜¯é€šä¿¡çš„ä¸­é—´ç±»
  */
 UCLASS()
 class SCENEQUICKBUILD_API USQBGameInstance : public UGameInstance
@@ -26,10 +26,10 @@ public:
 	virtual void StartGameInstance()override;
 	
 public:
-	/** ×¢²áBaseActor£¬ÒÔ±ãÏà»¥Ö®¼äµÄÍ¨ĞÅ*/
+	/** æ³¨å†ŒBaseActorï¼Œä»¥ä¾¿ç›¸äº’ä¹‹é—´çš„é€šä¿¡*/
 	void RegisterSQBActor(ABaseActor* InRef);
 
-	/** ×¢ÏúÁĞ±íÖĞ´æÔÚµÄActor£¬´ËÊ±¸ÃActorÒÑ±»´İ»Ù»òÕß²»²ÎÓëÍ¨ĞÅ½»»¥*/
+	/** æ³¨é”€åˆ—è¡¨ä¸­å­˜åœ¨çš„Actorï¼Œæ­¤æ—¶è¯¥Actorå·²è¢«æ‘§æ¯æˆ–è€…ä¸å‚ä¸é€šä¿¡äº¤äº’*/
 	void UnRegisterSQBActor(ABaseActor* InRef);
 
 	template<class T>
@@ -44,13 +44,11 @@ public:
 				return true;
 			}
 		}
-		return false;      //Éú³ÉÊ§°Ü
+		return false;      //ç”Ÿæˆå¤±è´¥
 	}
 	
-	/** »ñÈ¡ËùÓĞBaseActorµÄIDÃû*/
+	/** è·å–æ‰€æœ‰BaseActorçš„IDå*/
 	TArray<FName> GetData_AllOtherName(FName& PlatformID, ABaseActor* ActorRef);
-
-	void SendPosInfo(ABaseActor* Sender, ABaseActor* Receiver);
 	 
 	WH_COMMUNICATE_IMPLEMENT(SendPosInfo);
 	
@@ -59,9 +57,9 @@ public:
 private:
 	TArray<ABaseActor*> AllSQBActor;
 
-	/**ËùÓĞSQBActorÏà¹ØµÄÊı¾İ*/
+	/**æ‰€æœ‰SQBActorç›¸å…³çš„æ•°æ®*/
 	TArray<struct FPlatformData*> AllSQBData;
 
-	/**ÄÚ²¿Í¨ĞÅ¹ÜÀíÀà*/
+	/**å†…éƒ¨é€šä¿¡ç®¡ç†ç±»*/
 	UCommunicationManager* CommunicationManager;
 };

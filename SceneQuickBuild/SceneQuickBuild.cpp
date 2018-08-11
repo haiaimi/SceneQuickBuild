@@ -12,5 +12,4 @@ void FSceneQuickBuildModule::StartupModule()
 }
 
 
-IMPLEMENT_PRIMARY_GAME_MODULE( FSceneQuickBuildModule, SceneQuickBuild, "SceneQuickBuild" );
-
+IMPLEMENT_PRIMARY_GAME_MODULE(FSceneQuickBuildModule, SceneQuickBuild, "SceneQuickBuild");

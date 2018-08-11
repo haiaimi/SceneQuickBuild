@@ -7,6 +7,7 @@
 /**
  * ÏûÏ¢Àà
  */
+
 template<class T>
 class FSQBMessage
 {

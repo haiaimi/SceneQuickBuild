@@ -1,4 +1,4 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+﻿// Fill out your copyright notice in the Description page of Project Settings.
 
 #include "SQBGameInstance.h"
 #include "OriginHelper.h"
@@ -42,17 +42,12 @@ TArray<FName> USQBGameInstance::GetData_AllOtherName(FName& PlatformID, class AB
 	return Result;
 }
 
-void USQBGameInstance::SendPosInfo(ABaseActor* Sender, ABaseActor* Receiver)
-{
-	FSendPosInfo Temp;
-}
-
 void USQBGameInstance::SendPosInfo_Implementation(ABaseActor* Sender, void* InParams)
 {
 	FSendPosInfo Temp;
 	if (InParams)
 	{
-		
+		Temp.PlatformPos = Sender->GetActorLocation() + Sender->GetActorRotation().Vector()*100.f;
 	}
 
 	Sender->SendPosInfo_Publish(&Temp);

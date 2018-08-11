@@ -6,7 +6,7 @@
 
 UCommunicationManager::UCommunicationManager()
 {
-	FSendPosInfoDelegate A;
+
 }
 
 void UCommunicationManager::BuildCommunication(class ABaseActor* PublishActor, class ABaseActor* SubscribeActor, FString& FunName)
