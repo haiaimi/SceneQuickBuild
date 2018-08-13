@@ -25,6 +25,7 @@ void APlatformController::BeginPlay()
 	{
 		//Possess(ControlPlatform);
 		ControlPlatform->SetPlatformData(TEXT("Plane_1"), ESQBTeam::EPlayer);
+		ControlPlatform->SetOwner(this);
 
 		if (USQBGameInstance* GameInstance = Cast<USQBGameInstance>(GetGameInstance()))
 		{

@@ -58,7 +58,7 @@ private:
 	TArray<ABaseActor*> AllSQBActor;
 
 	/**所有SQBActor相关的数据*/
-	TArray<struct FPlatformData*> AllSQBData;
+	TArray<struct FBaseActorData*> AllSQBData;
 
 	/**内部通信管理类*/
 	UCommunicationManager* CommunicationManager;

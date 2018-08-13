@@ -3,6 +3,7 @@
 #include "SQBGameInstance.h"
 #include "OriginHelper.h"
 #include "BaseActor.h" 
+#include "FlightPlatform.h"
 
 
 USQBGameInstance::USQBGameInstance():
@@ -36,7 +37,7 @@ TArray<FName> USQBGameInstance::GetData_AllOtherName(FName& PlatformID, class AB
 	TArray<FName> Result;
 	for (auto Iter : AllSQBActor)
 	{
-		Result.Add(Iter->GetPlatformData().ID);
+		Result.Add(Iter->GetPlatformData()->ID);
 	}
 
 	return Result;
@@ -48,6 +49,7 @@ void USQBGameInstance::SendPosInfo_Implementation(ABaseActor* Sender, void* InPa
 	if (InParams)
 	{
 		Temp.PlatformPos = Sender->GetActorLocation() + Sender->GetActorRotation().Vector()*100.f;
+		Temp.FlySpeed = Cast<AFlightPlatform>(Sender)->GetFlySpeed();
 	}
 
 	Sender->SendPosInfo_Publish(&Temp);

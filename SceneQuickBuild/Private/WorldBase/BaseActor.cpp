@@ -22,7 +22,7 @@ ABaseActor::ABaseActor(const FObjectInitializer& ObjectInitializer):
 	ViewCamera = CreateDefaultSubobject<UCameraComponent>(TEXT("ViewCamera"));
 	BaseScene = CreateDefaultSubobject<USceneComponent>(TEXT("BaseScene"));
 	ViewCamera->SetupAttachment(BaseScene);
-	PlatformData.ID = TEXT("Base");
+	PlatformData = new FBaseActorData;
 }
 
 void ABaseActor::BeginPlay()
@@ -38,8 +38,6 @@ void ABaseActor::BeginPlay()
 	//OriginHelper::Debug_ScreenMessage(FString::FormatAsNumber(j));
 	//OriginHelper::Debug_ScreenMessage(FString::FormatAsNumber(ArgCount));
 
-	float Plane = 50.f;
-	WH_ARGNAME(Plane)
 	//OriginHelper::Debug_ScreenMessage(FString::SanitizeFloat(PlatformData.Speed.Plane_Speed));
 	//OriginHelper::Debug_ScreenMessage(FString::FormatAsNumber(a + b));
 
@@ -108,6 +106,9 @@ void ABaseActor::Tick(float DeltaTime)
 void ABaseActor::BeginDestroy()
 {
 	Super::BeginDestroy();
+
+	delete PlatformData;
+	PlatformData = nullptr;
 }
 
 void ABaseActor::SetCommunicateType(EOutsideCommunicate::Type InType)
@@ -125,20 +126,20 @@ void ABaseActor::SetMaxSpeed(float InSpeed)
 
 void ABaseActor::MoveForward(float Val)
 {
-	Implementation_MoveForward(Val);
+	MoveForwardImpl(Val);
 }
 
 void ABaseActor::MoveRight(float Val)
 {
-	Implementation_MoveRight(Val);
+	MoveRightImpl(Val);
 }
 
-void ABaseActor::Implementation_MoveForward(float Val)
+void ABaseActor::MoveForwardImpl(float Val)
 {
 	AddMovementInput(GetControlRotation().Vector(), Val);
 }
 
-void ABaseActor::Implementation_MoveRight(float Val)
+void ABaseActor::MoveRightImpl(float Val)
 {
 	FRotator ControlRot = GetControlRotation();
 	AddMovementInput(FRotationMatrix(ControlRot).GetUnitAxis(EAxis::Y), Val);
@@ -146,8 +147,8 @@ void ABaseActor::Implementation_MoveRight(float Val)
 
 void ABaseActor::SetPlatformData(FName InID, ESQBTeam::Type InTeam)
 {
-	PlatformData.ID = InID;
-	PlatformData.OwnerTeam = InTeam;
+	PlatformData->ID = InID;
+	PlatformData->OwnerTeam = InTeam;
 }
 
 void ABaseActor::UpdatePlatformData()
