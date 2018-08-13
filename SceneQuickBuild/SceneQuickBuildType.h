@@ -53,7 +53,7 @@ DECLARE_MULTICAST_DELEGATE_OneParam(FMessagePublish, FString&);
 #define WH_EVEN_CUSTOM_FUN_(t,v) InData->##v
 #define WH_EVEN_CUSTOM_FUN(t,v) WH_EVEN_CUSTOM_FUN_(t,v)
 #define WH_EVEN_CUSTOM_DATA_FUN(t,v)\
-PlatformData.##v=v
+TempData->v=v
 
 #define WH_ODD_EVEN_ARG_(v,f,...) \
 		EXPAND(WH_CONCAT(v, WH_ARG_COUNT(__VA_ARGS__))(f,##__VA_ARGS__))
@@ -93,7 +93,7 @@ TArray<FString> FunNames;\
 int64 DefineStart=1;
 
 #define WH_FUN_DEFINE_END(FunCount)\
-int32 CustomFunCounts=FunCount;
+const int32 CustomFunCounts=FunCount;
 
 /**识别方法名以便后面的使用*/
 #define WH_FUN_DEFINE_IMPLEMENT()\
@@ -124,7 +124,7 @@ if (GlobalBindFunctions.Num() == 0 && GlobalRemoveDelegates.Num()==0)\
 typedef ClassName::F##FunName F##FunName;\
 typedef ClassName::F##FunName##Delegate F##FunName##Delegate;
 
-#define WH_FUN_DEFINE(FunName,RetType,...)\
+#define WH_FUN_DEFINE(PlatformType,Controlled,FunName,RetType,...)\
 FString FunName##_STR=#FunName;\
 BindFunctionPtr FunName##BindPtr=&ABaseActor::Bind##FunName;\
 RemoveDelegatePtr FunName##RemoveDelegatePtr=&ABaseActor::Remove##FunName##Delegate;\
@@ -144,7 +144,13 @@ RetType FunName(\
 EXPAND(WH_FOREACH(##__VA_ARGS__))\
 )\
 {\
-	WH_ODD_EVEN_ARG(WH_ARG_DATA, WH_EVEN_CUSTOM_DATA_FUN, ##__VA_ARGS__);\
+	F##PlatformType##Data* TempData = static_cast<F##PlatformType##Data*>(PlatformData);\
+	if(TempData)\
+	{\
+		TempData->bControlled=Controlled;\
+		WH_ODD_EVEN_ARG(WH_ARG_DATA, WH_EVEN_CUSTOM_DATA_FUN, ##__VA_ARGS__);\
+		UpdatePlatformData();\
+	}\
 }\
 \
 UFUNCTION()\
@@ -196,24 +202,24 @@ EXPAND(WH_TEST1__(##__VA_ARGS__))
 
 #define WH_TEST1(...) EXPAND(WH_TEST1_(##__VA_ARGS__))
 
-#define WH_ARGNAME_(arg1)\
-PlatformData.Speed.arg1##_Speed=arg1;
-#define WH_ARGNAME(arg1)WH_ARGNAME_(arg1)
+//#define WH_ARGNAME_(arg1)\
+//PlatformData.Speed.arg1##_Speed=arg1;
+//#define WH_ARGNAME(arg1)WH_ARGNAME_(arg1)
 
-//#define GET_SPECIFIED_PLATFORM_DATA(PlatformID, DataType, DataName, ActorRef) \
-//DataType GetData_##DataName()     \
-//{     \
-//	DataType Temp;   \
-//	if(GetWorld())  \
-//	{  \
-//		if (USQBGameInstance* GameInstance = Cast<USQBGameInstance>(GetWorld()->GetGameInstance()))  \
-//		{            \
-//			Temp = GameInstance->GetData_##DataName(PlatformID, ActorRef); \
-//		}           \
-//	}    \
-//	return Temp;     \
-//\
-//}
+#define GET_SPECIFIED_PLATFORM_DATA(PlatformID, DataType, DataName, ActorRef) \
+DataType GetData_##DataName()     \
+{     \
+	DataType Temp;   \
+	if(GetWorld())  \
+	{  \
+		if (USQBGameInstance* GameInstance = Cast<USQBGameInstance>(GetWorld()->GetGameInstance()))  \
+		{            \
+			Temp = GameInstance->GetData_##DataName(PlatformID, ActorRef); \
+		}           \
+	}    \
+	return Temp;     \
+\
+}
 
 //#define BUILD_COMMUNICATE(PublishActor, SubscribeActor, DelegateName, DelegateInstance, ...)  \
 //FUNC_DECLARE_DELEGATE(DelegateName, ...)  \
@@ -285,7 +291,7 @@ namespace EFunctionName
 
 /**平台的信息*/
 USTRUCT(BlueprintType)
-struct FPlatformData
+struct FBaseActorData
 {
 	GENERATED_USTRUCT_BODY()
 
@@ -300,29 +306,29 @@ struct FPlatformData
 
 	/**平台所在位置*/
 	FVector PlatformPos;
+	
+	bool bControlled;
 
-	float FlySpeed;
+	//union PlatformData_Speed
+	//{
+	//	float Plane_Speed;
+	//	float Tank_Speed;
+	//	float Ship_Speed;
+	//};
 
-	union PlatformData_Speed
-	{
-		float Plane_Speed;
-		float Tank_Speed;
-		float Ship_Speed;
-	};
+	//PlatformData_Speed Speed;
 
-	PlatformData_Speed Speed;
-
-	FPlatformData()
+	FBaseActorData()
 	{
 		ID = TEXT("None");
 		OwnerTeam = ESQBTeam::UnKnown;
 		PlatformType = EPlatformCategory::EBaseModule;
 		PlatformPos = FVector::ZeroVector;
-		FlySpeed = 0.f;
+		bControlled = false;
 	}
 
 	/**拷贝构造函数*/
-	FPlatformData(const FPlatformData& InData)
+	FBaseActorData(const FBaseActorData& InData)
 	{
 		*this = InData;
 	}
@@ -330,7 +336,7 @@ struct FPlatformData
 
 /**具体的飞行平台*/
 USTRUCT(BlueprintType)
-struct FFlightData :public FPlatformData
+struct FFlightPlatformData :public FBaseActorData
 {
 	GENERATED_USTRUCT_BODY();
 
@@ -340,12 +346,14 @@ struct FFlightData :public FPlatformData
 	/**加速度*/
 	float FlyAcceleration;
 
-	FFlightData()
+	FFlightPlatformData():
+		FBaseActorData()
 	{
-
+		FlySpeed = 0.f;
+		FlyAcceleration = 0.f;
 	}
 
-	FFlightData(const FPlatformData& InData):
-		FPlatformData(InData)
+	FFlightPlatformData(const FBaseActorData& InData):
+		FBaseActorData(InData)
 	{}
 };
