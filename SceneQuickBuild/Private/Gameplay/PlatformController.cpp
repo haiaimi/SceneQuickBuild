@@ -99,6 +99,12 @@ void APlatformController::SetupInputComponent()
 	}
 }
 
+void APlatformController::ProcessPlayerInput(const float DeltaTime, const bool bGamePaused)
+{
+	Super::ProcessPlayerInput(DeltaTime, bGamePaused);
+	//OriginHelper::Debug_ScreenMessage(FString::SanitizeFloat(DeltaTime));
+}
+
 void APlatformController::EventTest()
 {
 	OriginHelper::Debug_ScreenMessage(TEXT("Event Touched"));
@@ -127,9 +133,17 @@ void APlatformController::ToggleTarget()
 
 void APlatformController::PossessNewTarget()
 {
+	static bool bControlPlatform = true;
 	if (AActor* TargetActor = GetViewTarget())
 	{
 		ABaseActor* TempTarget = Cast<ABaseActor>(TargetActor);
+		if (bControlPlatform)
+		{
+			bControlPlatform = false;
+			TempTarget->PlatformData->PlatformPos = FVector(-225.f, 0.f, 17454.f);
+			TempTarget->PlatformData->bControlled = true;
+		}
+		
 		Possess(TempTarget);
 	}
 }

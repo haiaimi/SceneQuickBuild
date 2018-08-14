@@ -305,6 +305,7 @@ struct FBaseActorData
 	EPlatformCategory::Type PlatformType;
 
 	/**平台所在位置*/
+	UPROPERTY(BlueprintReadWrite,EditAnywhere,Category="FlightData")
 	FVector PlatformPos;
 	
 	bool bControlled;

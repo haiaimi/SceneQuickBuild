@@ -25,6 +25,7 @@ public:
 
 	// Called to bind functionality to input
 	virtual void SetupInputComponent()override;
+	virtual void ProcessPlayerInput(const float DeltaTime, const bool bGamePaused);
 
 	void EventTest();
 
