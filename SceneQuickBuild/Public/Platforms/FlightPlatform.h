@@ -97,7 +97,7 @@ private:
 	float CurOffsetAngle_Up = 0.f;
 
 	/**飞机碰撞体*/
-	class UBoxComponent* PlaneCapsule;
+	class UBoxComponent* PlaneBox;
 
 	FFlightPlatformData* ExpandPlatformData;
 	

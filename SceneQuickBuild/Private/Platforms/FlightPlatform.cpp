@@ -16,22 +16,24 @@
 AFlightPlatform::AFlightPlatform(const FObjectInitializer& ObjectInitializer)
 	:Super(ObjectInitializer.SetDefaultSubobjectClass<UFloatingPawnMovement>(TEXT("ModuleMovement"))),
 	bInAir(false),
-	TakeOffAngle(0.f)
+	TakeOffAngle(0.f),
+	CurOffsetAngle_Right(0.f),
+	CurOffsetAngle_Up(0.f)
 {
-	PlaneCapsule = CreateDefaultSubobject<UBoxComponent>(TEXT("PlaneCollision"));
-	PlaneCapsule->SetupAttachment(BaseScene);
-	PlaneCapsule->SetBoxExtent(FVector(100.f, 46.f, 22.f));
-	PlaneCapsule->SetCollisionResponseToAllChannels(ECR_Block);
-	RootComponent = PlaneCapsule;
+	PlaneBox = CreateDefaultSubobject<UBoxComponent>(TEXT("PlaneCollision"));
+	PlaneBox->SetupAttachment(BaseScene);
+	PlaneBox->SetBoxExtent(FVector(100.f, 46.f, 22.f));
+	PlaneBox->SetCollisionResponseToAllChannels(ECR_Block);
+	RootComponent = PlaneBox;
 
 	PlaneMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("PlaneMesh"));
-	PlaneMesh->SetupAttachment(PlaneCapsule);
+	PlaneMesh->SetupAttachment(PlaneBox);
 	PlaneMesh->SetCollisionObjectType(ECollisionChannel::ECC_WorldDynamic);
 	PlaneMesh->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Block);
 	PlaneMesh->SetRelativeRotation(FRotator(0.f, -90.f, 0.f));
 	PlaneMesh->SetRelativeLocation(FVector(0.f, 0.f, -20.f));
 	
-	ModuleMovement->SetUpdatedComponent(PlaneCapsule);
+	ModuleMovement->SetUpdatedComponent(PlaneBox);
 	ViewCamera->SetupAttachment(PlaneMesh, TEXT("CameraSocket"));
 	static ConstructorHelpers::FObjectFinder<UStaticMesh> MeshFinder(TEXT("/Game/Plane/CGModel/F18C/F-18C_Hornet"));
 	if (!ensure(MeshFinder.Succeeded()))return;
@@ -79,8 +81,8 @@ void AFlightPlatform::Tick(float DeltaTime)
 	//SetMaxSpeed(FlySpeed*DeltaTime);
 
 	TakeOff(DeltaTime);
-
-	if (FlySpeed < 10000.f)return;
+	UpdatePlatformData();
+	if (FlySpeed < 10000.f || !bInAir)return;
 	// 飞机飞行时的晃动，提高真实性
 	static float ShakeTime = 0.f;
 	static float AddDir = 1.f;
@@ -167,10 +169,10 @@ void AFlightPlatform::MoveRightImpl(float Val)
 	if (Val != 0.f)
 	{
 		FRotator PlaneRot = GetActorRotation();
-		const FQuat AddedAngle_Yaw(FVector(0.f,0.f,1.f), Val * FMath::DegreesToRadians(DeltaTime*20.f));
+		const FQuat AddedAngle_Yaw(FVector(0.f, 0.f, 1.f), Val * FMath::DegreesToRadians(DeltaTime*20.f));
 		AddActorWorldRotation(AddedAngle_Yaw);
 
-		if (FlySpeed < 50000.f)return;
+		if (FlySpeed < 50000.f || !bInAir)return;
 		if (CurOffsetAngle_Right >= -30.f && CurOffsetAngle_Right <= 30.f)
 		{
 			float DeltaAngle = Val * DeltaTime * 30.f * 1.5f;
@@ -207,7 +209,8 @@ void AFlightPlatform::MoveRightImpl(float Val)
 
 void AFlightPlatform::MoveUp(float Val)
 {
-	//if (FlySpeed < 40000)return;
+	//
+	if (FlySpeed < 40000)return;
 	float DeltaTime = GetWorld()->GetDeltaSeconds();
 	
 	//if (Val != 0 && CurOffsetAngle_Up <= 40.f && CurOffsetAngle_Up >= -40.f)
@@ -237,16 +240,45 @@ void AFlightPlatform::UpdatePlatformData()
 
 	if (ExpandPlatformData->bControlled)      //当前飞机受控
 	{
-		if (TakeOffAngle == 0.f)  //飞机未起飞则先起飞
+		if (TakeOffAngle == 0.f && !bInAir)  //飞机未起飞则先起飞
 			TakeOffAngle = 0.001f;
 		if (!bInAir)return;   //等待飞机升空
+		else TakeOffAngle = 0.f;
+
+		FlySpeed = 500000.f;
 		const FVector TargetVec = PlatformData->PlatformPos - GetActorLocation();
 		const FVector PlainForwardVec = GetActorRotation().Vector();
 		const FVector PlainRightVec = FRotationMatrix(GetActorRotation()).GetUnitAxis(EAxis::Y);
 
 		const FVector TargetVec2D = TargetVec.GetSafeNormal2D();
 		const FVector PlainForwardVec2D = PlainForwardVec.GetSafeNormal2D();
+		const FVector PlainRightVec2D = PlainRightVec.GetSafeNormal2D();
 
+		const float SubDegree_Hori = FMath::RadiansToDegrees(FMath::Acos(FVector::DotProduct(TargetVec2D, PlainForwardVec2D)));
+		const float TargetZDegree = FMath::RadiansToDegrees(FMath::Acos(FVector::DotProduct(FVector(0.f, 0.f, 1.f), TargetVec.GetSafeNormal())));
+		const float PlainZDegree = FMath::RadiansToDegrees(FMath::Acos(FVector::DotProduct(FVector(0.f, 0.f, 1.f), PlainForwardVec)));
+	
+		//判断在左边还是右边，从而判断飞机的转向
+		if (FMath::Abs(SubDegree_Hori) > 2.f)
+		{
+			float Temp = FVector::DotProduct(TargetVec2D, PlainRightVec2D);
+			if (Temp >= 0)
+			{
+				MoveRightImpl(1.f);
+				MoveRightImpl(1.f);
+			}
+			else if (Temp < 0)
+			{
+				MoveRightImpl(-1.f);
+				MoveRightImpl(-1.f);
+			}
+		}
+
+		if (FMath::Abs(TargetZDegree - PlainZDegree) > 1.f)
+			if (PlainZDegree < TargetZDegree)
+				MoveUp(-1.f);
+			else
+				MoveUp(1.f);
 	}
 }
 
@@ -285,17 +317,22 @@ void AFlightPlatform::TakeOff(float DeltaTime)
 	if (TakeOffAngle == 0.f)return;
 	if (TakeOffAngle > 0.f)  //下面是转弯
 	{
-		const float NextAngle = FMath::FInterpConstantTo(TakeOffAngle, 90.f, DeltaTime, 10.f);
+		//下面的方法不太行
+		/*const float NextAngle = FMath::FInterpConstantTo(TakeOffAngle, 90.f, DeltaTime, 8.f);
 		const FVector CurVec = FRotator(0.f, 180.f - TakeOffAngle, 0.f).Vector()*570.f;
 		const FVector NextVec = FRotator(0.f, 180.f - NextAngle, 0.f).Vector()*570.f;
 		FVector MoveVec = NextVec - CurVec;
-		MoveVec.Y += 50.f * DeltaTime;
+		MoveVec.Y += 30.f * DeltaTime;
 
 		SetActorRotation(FRotator(0.f, NextAngle, 0.f));
 		SetActorLocation(GetActorLocation() + MoveVec);
-		TakeOffAngle = NextAngle;
-		if (TakeOffAngle == 90.f)
-			TakeOffAngle = -1;
+		TakeOffAngle = NextAngle;*/
+
+		//使用这个简单粗暴的方法
+		FlySpeed = 20000.f;
+		MoveRightImpl(1.f);
+		if (FMath::Abs(GetActorRotation().Yaw - 90.f) < 1.f)
+			TakeOffAngle = -1.f;
 	}
 	else if (TakeOffAngle < 0.f)   //下面的就是加速起步
 	{
